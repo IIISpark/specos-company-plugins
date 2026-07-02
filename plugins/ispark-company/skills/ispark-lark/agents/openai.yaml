@@ -1,0 +1,7 @@
+interface:
+  display_name: "ISpark SpecOS Lark"
+  short_description: "路由飞书/Lark 文档、表格、会议与协作操作"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#6e3c9f"
+  default_prompt: "使用 $ispark-lark 处理这个飞书/Lark 协作任务。"

@@ -1,0 +1,100 @@
+# ============================================================
+# Python bytecode and runtime caches
+# ============================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+.ipynb_checkpoints/
+.cache/
+
+# ============================================================
+# Python build and packaging artifacts
+# ============================================================
+.Python
+build/
+dist/
+downloads/
+develop-eggs/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+pip-wheel-metadata/
+*.egg
+*.egg-info/
+.installed.cfg
+MANIFEST
+
+# ============================================================
+# Test, coverage, and report artifacts
+# ============================================================
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+nosetests.xml
+*.cover
+
+# ============================================================
+# Local virtual environments and tool directories
+# ============================================================
+.env
+.env.*.local
+.venv/
+.conda/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# ============================================================
+# Editors and system files
+# ============================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*.sublime-*
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# ============================================================
+# Logs and temp directories
+# ============================================================
+*.log
+logs/
+.logs/
+.tmp/
+.docker/
+
+# ============================================================
+# Local docs and site build artifacts
+# ============================================================
+.sphinx_build/
+site/
+
+# ============================================================
+# Project-local outputs and helper files
+# ============================================================
+output/
+docker-compose.*.yml
+Dockerfile*.dev
+
+# Local config: ignore concrete local configs, keep published examples
+conf/**/*
+!conf/**/example-*.*

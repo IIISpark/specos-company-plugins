@@ -1,0 +1,44 @@
+{
+  "name": "ispark-company",
+  "version": "0.1.0+codex.20260702054413",
+  "description": "Company plugin for ISpark SpecOS Agent Harness workflows, shared skills, and operating practices.",
+  "author": {
+    "name": "ISpark SpecOS",
+    "email": "nmg_wk@yeah.net",
+    "url": "https://ispark.world"
+  },
+  "homepage": "https://ispark.world",
+  "repository": "https://github.com/IIISpark/specos-company-plugins",
+  "license": "UNLICENSED",
+  "keywords": [
+    "ispark",
+    "specos",
+    "agent-harness",
+    "company-os",
+    "workflow",
+    "skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "ISpark SpecOS",
+    "shortDescription": "公司级 Agent Harness 与工作流技能。",
+    "longDescription": "由 ISpark SpecOS 维护的公司级 Agent Harness 插件，用于沉淀和分发面向工程、产品、协作、发布、文档、审查与流程治理的 Skills，帮助不同岗位在统一上下文和操作系统方法下使用 Agent 完成工作。",
+    "developerName": "ISpark SpecOS",
+    "category": "Productivity",
+    "capabilities": [
+      "Write",
+      "Review",
+      "Automation"
+    ],
+    "websiteURL": "https://ispark.world",
+    "defaultPrompt": [
+      "用 ISpark SpecOS 的工作流规范整理这个任务。",
+      "用 SpecOS 的风险检查审阅这份计划。",
+      "用 Agent Harness 视角拆解这个流程。"
+    ],
+    "brandColor": "#6e3c9f",
+    "composerIcon": "./assets/logo-w.png",
+    "logo": "./assets/logo-w.png",
+    "logoDark": "./assets/logo-d.png"
+  }
+}

@@ -1,0 +1,133 @@
+# This file is an annotated config skeleton for Python Temporal worker topology.
+# It is not a required runtime file by itself; use it as the schema/design reference
+# for module-specific config models and repo-local config.template.yaml files.
+
+temporal:
+  server:
+    target_host: 127.0.0.1:7233
+    namespace: default
+    tls:
+      enabled: false
+      sni: null
+      cert_file: tls/client.pem
+      key_file: tls/client.key
+      ca_file: tls/ca.pem
+
+  task_queues:
+    # REQUIRED:
+    # - workflow queue is a governance / compatibility / replay boundary.
+    # - local/dev can reuse the same value as the default activity queue.
+    workflow: your-module.workflow
+    activities:
+      # REQUIRED:
+      # - default is enough for combined-small or early production-like workers.
+      default:
+        name: your-module.activity.default
+        profile: activity-io
+      # OPTIONAL:
+      # - split only when the activity boundary has different resource/rate-limit posture.
+      io:
+        name: your-module.activity.io
+        profile: activity-io
+      state:
+        name: your-module.activity.state
+        profile: activity-state
+      heavy:
+        name: your-module.activity.heavy
+        profile: activity-heavy
+
+  worker:
+    # REQUIRED:
+    # - role selects which worker role this process starts.
+    # - combined-small is appropriate for local/dev/bootstrap.
+    # - production-like workers should prefer workflow/activity-io/activity-state/activity-heavy.
+    role: combined-small
+    kind: default
+    identity: null
+    build_id: null
+    versioning_behavior: null
+    graceful_shutdown_seconds: 60
+    # Timeout boundary:
+    # - do not make workflow run/execution timeout a default static config value;
+    # - use it only as a documented wide guardrail or business SLA;
+    # - provider/LLM queued/running waits belong in workflow durable timer/query state;
+    # - activity timeout protects one attempt and one worker slot, not total business wait;
+    # - provider/model SDK and HTTP clients should not add hidden retries or narrow
+    #   generation-time request timeouts inside the activity.
+    retry_profile: production
+
+  concurrency:
+    # Pick fixed concurrency OR a tuner strategy. Do not mix the two in the same worker.
+    # These are worker execution controls, not the workflow fan-out window and not
+    # provider quota. Workflow windowing should be a rollout strategy; provider
+    # capacity should come from provider-gateway admission/metrics when available.
+    max_concurrent_workflow_tasks: 32
+    # Model/provider activity-io lanes should normally start at 16. Heavy CPU
+    # lanes such as FFmpeg/transcode should use a separate role with a lower cap.
+    max_concurrent_activities: 16
+    max_concurrent_local_activities: null
+    max_cached_workflows: 128
+    activity_executor_max_workers: 16
+
+  pollers:
+    workflow_task:
+      # simple_max keeps behavior predictable for bootstrap.
+      # autoscaling should be used only when the target Temporal SDK/server supports it.
+      mode: simple_max
+      minimum: null
+      initial: null
+      maximum: 5
+    activity_task:
+      mode: simple_max
+      minimum: null
+      initial: null
+      maximum: 5
+
+  tuner:
+    # disabled | fixed | resource_based | custom
+    # If enabled, remove legacy max_concurrent_* controls from the runtime Worker init.
+    mode: disabled
+    target_cpu_utilization: null
+    target_memory_utilization: null
+
+  rate_limits:
+    max_activities_per_second: null
+    max_task_queue_activities_per_second: null
+    # provider_domain is a routing/capacity domain identifier, not the quota itself.
+    # Dynamic provider capacity should be inferred by provider-gateway feedback
+    # such as 429, first-pending cursors, pending/completion pace, and shared in-flight,
+    # then exposed through provider-gateway metrics or a capacity control plane.
+    # Do not maintain per-upstream max_concurrency in each worker config.
+    provider_domain: null
+    provider_capacity_source: provider_gateway_adaptive # provider_gateway_adaptive | provider_gateway_metrics | capacity_control_plane
+
+  probes:
+    readiness:
+      mode: config
+    liveness:
+      mode: process
+
+  scaling:
+    enabled: false
+    # manual | hpa | keda_temporal | prometheus
+    mode: manual
+    # First autoscaling pilot should usually be KEDA Temporal only for a selected
+    # activity-io queue with provider-gateway dynamic admission already in place.
+    # Prometheus/HPA belongs to the next phase when provider capacity, slots,
+    # schedule-to-start, DB/backing-store, and pod resource metrics are available.
+    min_replicas: 1
+    max_replicas: 1
+    primary_metric: schedule_to_start
+    target_schedule_to_start_seconds: 5
+    target_queue_size: null
+    cooldown_seconds: 300
+    scale_down_stabilization_seconds: 300
+
+workflow_strategy:
+  # Keep fan-out windows configurable so rollout can widen/narrow release without
+  # changing workflow code. Use this for target/shard release structure only;
+  # worker slots, replicas, rate limits, and provider gateway absorb throughput.
+  max_in_flight_targets: 8
+  provider_shard_size: 1
+  commit_successful_shards: true
+  skip_committed_targets_on_rerun: true

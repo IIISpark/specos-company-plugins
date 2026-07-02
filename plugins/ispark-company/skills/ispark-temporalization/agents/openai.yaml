@@ -1,0 +1,7 @@
+interface:
+  display_name: "ISpark SpecOS Temporalization"
+  short_description: "规划和规范 Temporal-ready Python worker"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#6e3c9f"
+  default_prompt: "使用 $ispark-temporalization 评估、初始化或规范这个 Python Temporal worker。"

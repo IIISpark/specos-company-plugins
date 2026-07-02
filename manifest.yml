@@ -1,0 +1,14 @@
+name: ispark-codex-plugin
+namespace: ispark
+channel: local-draft
+managed_prefix: ispark-
+default_target: codex
+skills_root: skills
+profiles_root: profiles
+plugin:
+  marketplace: .agents/plugins/marketplace.json
+  name: ispark-company
+  path: plugins/ispark-company
+
+holdouts:
+  - apifox-doc-governance

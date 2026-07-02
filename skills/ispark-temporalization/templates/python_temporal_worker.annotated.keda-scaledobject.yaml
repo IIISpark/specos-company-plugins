@@ -1,0 +1,89 @@
+# Optional annotated KEDA ScaledObject template for Temporal worker autoscaling.
+# This is not a default requirement for every repo. Use it only when the target
+# environment has KEDA installed, the queue/backlog metric is the right signal,
+# and provider-gateway global pressure records or shared capacity state can
+# guard scale-up for external APIs.
+
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: your-module-activity-io-worker
+  namespace: dramawork
+  labels:
+    app.kubernetes.io/name: your-module-activity-io-worker
+    app.kubernetes.io/component: temporal-worker
+    dramawork.io/worker-role: activity-io
+    dramawork.io/capacity-profile: activity-io
+spec:
+  # REQUIRED TO REPLACE:
+  # - target a Deployment that owns one coherent worker role.
+  scaleTargetRef:
+    name: your-module-activity-io-worker
+  # REQUIRED TO REVIEW:
+  # - keep workflow/control queues above zero unless scale-to-zero was reviewed.
+  minReplicaCount: 1
+  maxReplicaCount: 5
+  pollingInterval: 30
+  cooldownPeriod: 300
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300
+    # REQUIRED TO REVIEW for provider-backed queues:
+    # - Use a composite metric so backlog can scale up only when provider capacity
+    #   guard is healthy. Independent triggers are unsafe when KEDA would take
+    #   the max and bypass the provider guard.
+    # - Keep this block out for pure local/backing-store work that has no provider
+    #   pressure guard.
+    scalingModifiers:
+      target: "10"
+      activationTarget: "0"
+      metricType: "AverageValue"
+      formula: "provider_guard_blocked > 0 ? 0 : temporal_backlog"
+  triggers:
+    - type: temporal
+      name: temporal_backlog
+      metadata:
+        # REQUIRED TO REPLACE:
+        # - task queue should match the activity queue owned by this worker role.
+        namespace: default
+        taskQueue: your-module.activity.io
+        queueTypes: activity
+        # REQUIRED TO REVIEW:
+        # - backlog target is only one signal. Also watch schedule-to-start,
+        #   provider estimated_allowed_concurrency/cluster_in_flight/
+        #   first_pending_cursor/429/5xx, DB/backing-store pressure,
+        #   and pod resources.
+        targetQueueSize: "10"
+        # REQUIRED TO REPLACE:
+        # - endpoint and TLS auth must match the environment.
+        endpoint: temporal-frontend.default.svc.cluster.local:7233
+    - type: prometheus
+      name: provider_guard_blocked
+      metadata:
+        # REQUIRED TO REPLACE:
+        # - point at the environment's Prometheus service.
+        serverAddress: http://prometheus-operated.monitoring.svc.cluster.local:9090
+        # REQUIRED TO REPLACE:
+        # - query must return one 0/1 vector/scalar for the provider/model scope
+        #   this worker role consumes.
+        # - use cross-pod/global provider pressure records or shared capacity
+        #   snapshots, not pod-local adaptive-window metrics.
+        query: |
+          max(
+            proxy_gateway:provider_global_capacity_guard_blocked5m{
+              provider_domain="replace-me",
+              internal_model=~"replace-me"
+            }
+          ) or vector(0)
+        threshold: "1"
+        activationThreshold: "0"
+
+# NOTES:
+# - Prefer separate ScaledObjects per activity worker role.
+# - Do not use backlog-only scaling for provider-limited work without provider-gateway global pressure guard or shared capacity state.
+# - First pilot: one activity-io queue, minReplicaCount >= 1, low maxReplicaCount,
+#   explicit cooldown and scale-down stabilization.
+# - Later phase: use Prometheus/HPA or KEDA Prometheus when provider capacity,
+#   schedule-to-start, slots, DB/backing-store, and pod resource metrics are available.

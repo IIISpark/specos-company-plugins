@@ -1,0 +1,7 @@
+interface:
+  display_name: "ISpark SpecOS Product Design"
+  short_description: "产品判断、Founder 视角与前端体验设计"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#6e3c9f"
+  default_prompt: "使用 $ispark-product-design 评估这个产品方向或体验方案。"

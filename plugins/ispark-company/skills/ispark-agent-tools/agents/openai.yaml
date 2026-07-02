@@ -1,0 +1,7 @@
+interface:
+  display_name: "ISpark SpecOS Agent Tools"
+  short_description: "维护公司级 skill、plugin 与 agent 工具链"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#6e3c9f"
+  default_prompt: "使用 $ispark-agent-tools 审计或维护这个 skill/plugin 分发流程。"

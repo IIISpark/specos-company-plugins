@@ -1,0 +1,209 @@
+# This file is the canonical annotated template for a Python Temporal worker deployment manifest.
+# Use this file itself as the repo template baseline for real manifests.
+# Read this file first to identify:
+# - fields that must be replaced
+# - knobs that are optional or cluster-specific
+# - cases where a specialized manifest or Helm chart should derive from this baseline
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # REQUIRED TO REPLACE:
+  # - deployment name
+  name: your-module-worker
+  # REQUIRED TO REPLACE if your cluster uses another namespace.
+  namespace: dramawork
+  labels:
+    # REQUIRED TO REPLACE:
+    # - keep labels aligned with the real module/deployment identity
+    app.kubernetes.io/name: your-module-worker
+    app.kubernetes.io/component: temporal-worker
+    # RECOMMENDED:
+    # - keep these labels aligned with the config-driven worker role.
+    # - they are labels for observation/routing, not the source of truth.
+    dramawork.io/worker-role: combined-small
+    dramawork.io/task-queue: your-module.workflow
+    dramawork.io/capacity-profile: combined-small
+spec:
+  # OPTIONAL:
+  # - `1` is the neutral default for a worker template.
+  # - tune this per queue backlog, rollout policy, and resource profile.
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # OPTIONAL:
+      # - keep these conservative defaults unless the repo has a different rollout convention.
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      # REQUIRED TO REPLACE:
+      app.kubernetes.io/name: your-module-worker
+  template:
+    metadata:
+      labels:
+        # REQUIRED TO REPLACE:
+        app.kubernetes.io/name: your-module-worker
+        app.kubernetes.io/component: temporal-worker
+        dramawork.io/worker-role: combined-small
+        dramawork.io/task-queue: your-module.workflow
+        dramawork.io/capacity-profile: combined-small
+    spec:
+      # OPTIONAL BUT RECOMMENDED:
+      # - keep this explicit for graceful worker shutdown.
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: worker
+          # REQUIRED TO REPLACE:
+          # - registry
+          # - image name
+          # - immutable tag or digest
+          # Never deploy `latest` as the formal production reference.
+          image: registry.example.com/your-module:2026-04-09-sha123456
+          imagePullPolicy: IfNotPresent
+          # REQUIRED TO REVIEW:
+          # - adjust args to the repo's real worker entry shape.
+          # - this template assumes a single canonical entry plus `--config`.
+          args:
+            - --config
+            - /app/conf/config.yaml
+          # OPTIONAL:
+          # - Prefer schema-bearing config for worker role, task queues, slots, pollers, and rate limits.
+          # - Environment variables below are placeholders only when the repo intentionally supports overrides.
+          # - Do not make env vars the primary topology contract if the repo already has config models.
+          # env:
+          #   - name: WORKER_ROLE
+          #     value: combined-small
+          #   - name: TEMPORAL_WORKFLOW_TASK_QUEUE
+          #     value: your-module.workflow
+          #   - name: TEMPORAL_ACTIVITY_TASK_QUEUE
+          #     value: your-module.activity.default
+          #   - name: TEMPORAL_MAX_CONCURRENT_WORKFLOW_TASKS
+          #     value: "32"
+          #   - name: TEMPORAL_MAX_CONCURRENT_ACTIVITIES
+          #     value: "32"
+          #   - name: TEMPORAL_TASK_QUEUE_ACTIVITIES_PER_SECOND
+          #     value: ""
+          volumeMounts:
+            # REQUIRED TO REVIEW:
+            # - remove or rename if the module uses another config mount convention.
+            - name: worker-config
+              mountPath: /app/conf
+              readOnly: true
+            # OPTIONAL:
+            # - keep when TLS/CA material is mounted into the worker.
+            # - remove if the module does not use filesystem-mounted TLS assets.
+            - name: worker-tls
+              mountPath: /app/tls
+              readOnly: true
+            # OPTIONAL BUT RECOMMENDED WHEN `readOnlyRootFilesystem: true`:
+            # - provide an explicit scratch path for `/tmp`.
+            # - in Kubernetes, `emptyDir` is the usual analogue of container tmpfs scratch space.
+            # - if the worker never writes to `/tmp`, you can omit this.
+            # - name: worker-tmp
+            #   mountPath: /tmp
+            # OPTIONAL BUT RECOMMENDED WHEN THE RUNTIME NEEDS A WRITABLE CACHE DIR:
+            # - match this mount with the image's chosen cache directory.
+            # - omit it if the worker does not need runtime cache writes.
+            # - name: worker-cache
+            #   mountPath: /home/appuser/.cache
+          # REQUIRED TO REPLACE:
+          # - module name
+          # - config path
+          # OPTIONAL:
+          # - if the repo uses startupProbe, keep readiness lighter and move slow initialization there.
+          # - readiness may check config parsing and intentionally chosen dependency reachability.
+          # - do not include provider calls or S3/OSS HeadBucket unless the operator explicitly wants
+          #   that dependency to gate readiness.
+          readinessProbe:
+            exec:
+              command:
+                - python
+                - -m
+                - your_module
+                - --config
+                - /app/conf/config.yaml
+                - --healthcheck
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          # OPTIONAL:
+          # - liveness is intentionally commented out by default.
+          # - enable it only when the command is process-local and cannot fail because Temporal,
+          #   S3/OSS, provider gateway, database, or external model providers are unavailable.
+          # - never call S3/OSS HeadBucket or other external reachability checks from liveness.
+          # livenessProbe:
+          #   exec:
+          #     command:
+          #       - python
+          #       - -m
+          #       - your_module
+          #       - --config
+          #       - /app/conf/config.yaml
+          #       - --healthcheck-process
+          #   initialDelaySeconds: 20
+          #   periodSeconds: 20
+          #   timeoutSeconds: 5
+          #   failureThreshold: 3
+          # REQUIRED TO REPLACE:
+          # - requests/limits should reflect the real worker profile.
+          # - split workflow workers and heavy activity workers if the resource profile diverges materially.
+          # - classify each activity boundary separately:
+          #   activity-io for provider/API submission and polling;
+          #   activity-state for DB/manifest/registry mutation;
+          #   activity-heavy for FFmpeg, video/audio/image processing, GPU/model work, or large local files.
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          # OPTIONAL BUT STRONGLY RECOMMENDED:
+          # - keep a non-root baseline unless cluster policy provides it elsewhere.
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            allowPrivilegeEscalation: false
+            # OPTIONAL BUT RECOMMENDED:
+            # - keep the default seccomp profile unless the workload has a proven need for something else.
+            seccompProfile:
+              type: RuntimeDefault
+            # OPTIONAL BUT RECOMMENDED:
+            # - drop all ambient Linux capabilities for normal workers.
+            capabilities:
+              drop:
+                - ALL
+            # OPTIONAL:
+            # - set this to true only after explicit writable scratch paths such as `/tmp` and cache dirs are mounted.
+            # - a read-only root without scratch mounts often breaks libraries in non-obvious ways.
+            readOnlyRootFilesystem: false
+      volumes:
+        # REQUIRED TO REPLACE:
+        # - config source name
+        - name: worker-config
+          configMap:
+            name: your-module-config
+        # OPTIONAL:
+        # - keep only when TLS/CA or certificates are mounted as files.
+        - name: worker-tls
+          secret:
+            name: your-module-tls
+        # OPTIONAL:
+        # - pair these with the commented volume mounts above when enabling read-only root filesystems.
+        # - `medium: Memory` is the Kubernetes analogue of tmpfs-style ephemeral write space.
+        # - name: worker-tmp
+        #   emptyDir:
+        #     medium: Memory
+        #     sizeLimit: 64Mi
+        # - name: worker-cache
+        #   emptyDir:
+        #     medium: Memory
+        #     sizeLimit: 64Mi
+
+# OPTIONAL AUTOSCALING:
+# - Keep autoscaling in a separate HPA/KEDA object owned by the environment or Helm chart.
+# - Use task queue backlog/schedule-to-start plus provider/backing-store pressure, not CPU alone, for IO workers.
+# - Keep min replicas for workflow/control queues unless scale-to-zero has been explicitly reviewed.

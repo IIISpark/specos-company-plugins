@@ -1,0 +1,7 @@
+interface:
+  display_name: "ISpark SpecOS Docs & Issues"
+  short_description: "写作长效文档、PRD、issue 与发布说明"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#6e3c9f"
+  default_prompt: "使用 $ispark-docs-issues 整理这份文档或 issue 计划。"

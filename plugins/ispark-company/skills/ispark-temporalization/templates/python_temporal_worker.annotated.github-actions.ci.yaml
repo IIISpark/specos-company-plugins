@@ -1,0 +1,120 @@
+name: python-temporal-worker-ci
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+concurrency:
+  # 避免同一分支同一工作流重复堆积。
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  # 默认只给最小只读权限。
+  contents: read
+
+env:
+  # 旧版 actions 仍可能声明 node20，这里统一强制跑在 node24。
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  test:
+    name: Test / Lint / Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        # actions/checkout@v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Setup Python
+        # actions/setup-python@v6.2.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          # 按项目基线替换。
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install uv
+        run: python -m pip install --upgrade pip uv
+
+      - name: Sync dependencies
+        # 若项目不使用 uv，可改成 pip / poetry / hatch 的安装方式。
+        run: uv sync --extra dev --extra temporal
+
+      - name: Ruff
+        run: uv run ruff check src tests
+
+      - name: Pyright
+        run: uv run pyright src
+
+      - name: Pytest
+        # 如果 repo 默认覆盖率很重，可拆成 smoke + full 两层。
+        run: uv run pytest --no-cov
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # 若后续要上 SARIF 上传或 GitHub 安全事件回传，可保留。
+      security-events: write
+    steps:
+      - name: Checkout
+        # actions/checkout@v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Setup Python
+        # actions/setup-python@v6.2.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install security tooling
+        # pip-audit 负责依赖 CVE，bandit 负责 Python 静态安全扫描。
+        run: python -m pip install --upgrade pip uv pip-audit bandit
+
+      - name: Export dependency graph
+        # 对 uv 项目，先导出 requirements 再审计更稳定。
+        run: uv export --frozen --extra dev --extra temporal --no-hashes --format requirements-txt -o requirements-ci.txt
+
+      - name: Dependency audit
+        run: pip-audit -r requirements-ci.txt
+
+      - name: Static security scan
+        # 如果 repo 明确不用 bandit，可换成 semgrep 或 repo 标准工具。
+        run: bandit -q -r src
+
+  build:
+    name: Build Distribution
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        # actions/checkout@v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Setup Python
+        # actions/setup-python@v6.2.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install build tooling
+        run: python -m pip install --upgrade pip build
+
+      - name: Build package
+        # 如果项目主要产物是 Docker 镜像或 worker image，可替换为镜像构建。
+        run: python -m build
+
+      - name: Upload dist artifact
+        # actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: python-package-dist
+          path: dist/
+          if-no-files-found: error

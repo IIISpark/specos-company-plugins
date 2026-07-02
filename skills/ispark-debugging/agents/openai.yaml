@@ -1,0 +1,7 @@
+interface:
+  display_name: "ISpark SpecOS Debugging"
+  short_description: "按证据定位 bug、测试失败与性能异常"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#6e3c9f"
+  default_prompt: "使用 $ispark-debugging 调查这个异常并给出可验证的根因。"

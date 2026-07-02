@@ -1,0 +1,78 @@
+name: python-temporal-worker-codeql
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  schedule:
+    # 周期扫描是对 push / PR 之外的补偿，不替代日常 CI。
+    - cron: "0 3 * * 1"
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+env:
+  # 旧版 actions 仍可能声明 node20，这里统一强制跑在 node24。
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  codeql-eligibility:
+    if: ${{ vars.ENABLE_CODEQL == 'true' }}
+    name: CodeQL Eligibility
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - name: Check Advanced Security availability
+        id: check
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          status_code="$(curl -sS -o response.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}")"
+          if [[ "${status_code}" != "200" ]]; then
+            echo "enabled=false" >> "${GITHUB_OUTPUT}"
+            echo "::notice::Skipping CodeQL because repository metadata is unavailable (${status_code})."
+            exit 0
+          fi
+          advanced_security_status="$(jq -r '.security_and_analysis.advanced_security.status // "disabled"' response.json)"
+          if [[ "${advanced_security_status}" == "enabled" ]]; then
+            echo "enabled=true" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          echo "enabled=false" >> "${GITHUB_OUTPUT}"
+          echo "::notice::Skipping CodeQL because GitHub Advanced Security is not enabled for this repository."
+
+  codeql:
+    needs: codeql-eligibility
+    if: ${{ vars.ENABLE_CODEQL == 'true' && needs.codeql-eligibility.outputs.enabled == 'true' }}
+    name: CodeQL
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language:
+          - python
+    steps:
+      - name: Checkout
+        # actions/checkout@v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Initialize CodeQL
+        # github/codeql-action@v4
+        uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13
+        with:
+          # 如果 repo 同时含 JS/TS/Go，可扩矩阵，但不要无谓扩大扫描面。
+          languages: ${{ matrix.language }}
+
+      - name: Perform CodeQL analysis
+        # github/codeql-action@v4
+        uses: github/codeql-action/analyze@c10b8064de6f491fea524254123dbe5e09572f13

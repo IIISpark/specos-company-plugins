@@ -1,0 +1,20 @@
+{
+  "name": "ispark-company",
+  "interface": {
+    "displayName": "ISpark SpecOS"
+  },
+  "plugins": [
+    {
+      "name": "ispark-company",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ispark-company"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

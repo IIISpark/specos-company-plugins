@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Temporalization">
+  <rect width="64" height="64" rx="14" fill="#f4effa"/>
+  <path d="M18 45V25m14 20V19m14 26V29" fill="none" stroke="#6e3c9f" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="18" cy="25" r="6" fill="#fff" stroke="#6e3c9f" stroke-width="4"/>
+  <circle cx="32" cy="19" r="6" fill="#fff" stroke="#6e3c9f" stroke-width="4"/>
+  <circle cx="46" cy="29" r="6" fill="#fff" stroke="#6e3c9f" stroke-width="4"/>
+  <path d="M18 45h28m0 0-5-5m5 5-5 5" fill="none" stroke="#6e3c9f" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

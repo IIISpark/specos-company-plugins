@@ -1,0 +1,7 @@
+interface:
+  display_name: "ISpark SpecOS Dev Workflow"
+  short_description: "规划、实现并验证工程任务的工作流"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#6e3c9f"
+  default_prompt: "使用 $ispark-dev-workflow 规划并推进这个工程任务。"

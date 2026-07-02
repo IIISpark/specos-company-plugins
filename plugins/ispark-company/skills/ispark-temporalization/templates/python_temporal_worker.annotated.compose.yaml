@@ -1,0 +1,97 @@
+# This file is the canonical annotated template for a Python Temporal worker compose file.
+# Use this file itself as the repo template baseline for local/integration environments.
+# Read this file first to identify:
+# - which values must be replaced
+# - which defaults are optional
+# - when compose is the right fit versus Kubernetes or a dedicated deployment system
+
+name: your-module
+
+x-worker-common: &worker-common
+  build:
+    # REQUIRED TO REVIEW:
+    # - `..` assumes the compose file lives under a deploy/ subdirectory.
+    # - adjust if your repo stores compose elsewhere.
+    context: ..
+    dockerfile: Dockerfile
+    args:
+      # OPTIONAL:
+      # - these keep build-time mirror/private-index routing configurable.
+      PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+      PIP_EXTRA_INDEX_URL: ${PIP_EXTRA_INDEX_URL:-}
+      PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-}
+  # REQUIRED TO REPLACE:
+  # - image name/tag
+  image: your-org/your-module:dev
+  # OPTIONAL BUT RECOMMENDED:
+  # - `init: true` is the compose analogue of having an init process.
+  # - keep it even if your image already ships `tini`; it is harmless and improves local ergonomics.
+  init: true
+  restart: unless-stopped
+  # OPTIONAL BUT RECOMMENDED:
+  # - turn this on only when scratch paths are explicitly provided below.
+  read_only: true
+  # OPTIONAL BUT RECOMMENDED:
+  # - drop all ambient capabilities for normal workers.
+  cap_drop:
+    - ALL
+  # OPTIONAL BUT RECOMMENDED:
+  # - keep the runtime from gaining extra privileges.
+  security_opt:
+    - no-new-privileges:true
+  # OPTIONAL:
+  # - tune according to expected worker concurrency and local machine limits.
+  pids_limit: 256
+  # OPTIONAL BUT RECOMMENDED WHEN `read_only: true`:
+  # - compose `tmpfs` plays the same role as Kubernetes `emptyDir` scratch mounts.
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
+    - /home/appuser/.cache:rw,noexec,nosuid,size=64m
+  volumes:
+    # REQUIRED TO REPLACE:
+    # - local runtime config path
+    - ./config.yaml:/app/conf/config.yaml:ro
+    # OPTIONAL:
+    # - keep a writable output mount when the module emits local artifacts.
+    # - remove or replace it if outputs are fully remote.
+    - ../output:/work/output
+services:
+  worker:
+    <<: *worker-common
+    # REQUIRED TO REPLACE:
+    # - command shape; the standard baseline is a single entry plus `--config`
+    command: ["python", "-m", "your_module", "--config", "/app/conf/config.yaml"]
+
+  # OPTIONAL TOPOLOGY SMOKE:
+  # - Keep these commented examples as local/CI topology smoke only.
+  # - Production capacity belongs in Kubernetes Deployments plus HPA/KEDA or a similar platform primitive.
+  # - Use low local concurrency so a developer workstation is not saturated.
+  # worker-workflow:
+  #   <<: *worker-common
+  #   command: ["python", "-m", "your_module", "--config", "/app/conf/config.workflow.yaml"]
+  #
+  # worker-activity-io:
+  #   <<: *worker-common
+  #   command: ["python", "-m", "your_module", "--config", "/app/conf/config.activity-io.yaml"]
+  #
+  # worker-activity-heavy:
+  #   <<: *worker-common
+  #   command: ["python", "-m", "your_module", "--config", "/app/conf/config.activity-heavy.yaml"]
+
+  # OPTIONAL BUT RECOMMENDED:
+  # - keep a one-shot smoke service for local/integration validation.
+  # - derive instead of copying if your healthcheck needs object-store, LLM-key, or other dependency flags.
+  worker-healthcheck-smoke:
+    <<: *worker-common
+    restart: "no"
+    command: ["python", "-m", "your_module", "--config", "/app/conf/config.yaml", "--healthcheck"]
+
+# USE COMPOSE WHEN:
+# - you need a local or CI integration topology
+# - you want one image to run the canonical worker entry
+# - you need a lightweight smoke surface before Kubernetes
+#
+# DO NOT TREAT THIS AS THE FINAL PRODUCTION SHAPE WHEN:
+# - the repo is already Kubernetes-first
+# - rollout policy, autoscaling, or secret handling requires cluster primitives
+# - you need durable service discovery, probes, PDBs, or workload identity

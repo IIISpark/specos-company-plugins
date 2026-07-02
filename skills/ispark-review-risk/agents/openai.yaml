@@ -1,0 +1,7 @@
+interface:
+  display_name: "ISpark SpecOS Review & Risk"
+  short_description: "审查代码、计划、安全边界与架构风险"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#6e3c9f"
+  default_prompt: "使用 $ispark-review-risk 审查这份代码、计划或风险边界。"

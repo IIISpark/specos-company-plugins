@@ -1,0 +1,7 @@
+interface:
+  display_name: "ISpark SpecOS Browser QA"
+  short_description: "用真实浏览器验证页面、交互与发布状态"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#6e3c9f"
+  default_prompt: "使用 $ispark-browser-qa 验证这个网页或部署的真实浏览器表现。"

@@ -1,0 +1,158 @@
+name: python-temporal-worker-image
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Whether to push the built image to the registry"
+        required: false
+        type: boolean
+        default: false
+      image_tag:
+        description: "Optional extra image tag for manual runs"
+        required: false
+        type: string
+        default: ""
+      registry:
+        description: "Optional registry override for manual runs"
+        required: false
+        type: string
+        default: ""
+      apt_mirror_url:
+        description: "Optional APT mirror override for manual runs"
+        required: false
+        type: string
+        default: ""
+      pip_index_url:
+        description: "Optional PIP index override for manual runs"
+        required: false
+        type: string
+        default: ""
+      pip_extra_index_url:
+        description: "Optional extra Python package index for manual runs"
+        required: false
+        type: string
+        default: ""
+      pip_trusted_host:
+        description: "Optional trusted host for Python package install"
+        required: false
+        type: string
+        default: ""
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - "v*"
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+  packages: write
+  # 仅在启用镜像证明时使用，但权限先声明完整，避免后续派生时遗漏。
+  attestations: write
+  id-token: write
+
+env:
+  # 旧版 actions 仍可能声明 node20，这里统一强制跑在 node24。
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  build-and-push-image:
+    name: Build and Publish Worker Image
+    runs-on: ubuntu-latest
+    # 环境级变量/密钥必须通过 job 绑定后才可见。仅在 UI 创建 environment 不会自动注入。
+    environment: ${{ (github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v')) && 'production' || 'dev' }}
+    env:
+      # 统一在 job env 中解析，避免 environment 级变量在 workflow 顶层读取不到。
+      REGISTRY: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.registry != '' && github.event.inputs.registry || vars.IMAGE_REGISTRY || 'ghcr.io' }}
+      IMAGE_NAME: ${{ vars.IMAGE_REPOSITORY || github.repository }}
+      PUBLISH_ON_MAIN: ${{ vars.IMAGE_PUBLISH_ON_MAIN || 'false' }}
+      ENABLE_IMAGE_ATTESTATION: ${{ vars.ENABLE_IMAGE_ATTESTATION || 'false' }}
+      APT_MIRROR_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.apt_mirror_url != '' && github.event.inputs.apt_mirror_url || vars.APT_MIRROR_URL || '' }}
+      PIP_INDEX_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.pip_index_url != '' && github.event.inputs.pip_index_url || vars.PIP_INDEX_URL || 'https://pypi.org/simple' }}
+      PIP_EXTRA_INDEX_URL: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.pip_extra_index_url != '' && github.event.inputs.pip_extra_index_url || vars.PIP_EXTRA_INDEX_URL || '' }}
+      PIP_TRUSTED_HOST: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.pip_trusted_host != '' && github.event.inputs.pip_trusted_host || vars.PIP_TRUSTED_HOST || '' }}
+      SHOULD_PUSH: ${{ github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true') || ((github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && vars.IMAGE_PUBLISH_ON_MAIN == 'true') }}
+    steps:
+      - name: Checkout
+        # actions/checkout@v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Set up Docker Buildx
+        # docker/setup-buildx-action@v4.0.0
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd
+
+      - name: Log in to image registry
+        if: env.SHOULD_PUSH == 'true'
+        # docker/login-action@v4.1.0
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121
+        with:
+          registry: ${{ env.REGISTRY }}
+          # GHCR 可直接用 github.actor + GITHUB_TOKEN。
+          # 私有仓库或第三方镜像仓库请改成 repo/environment variable + secret。
+          username: ${{ vars.IMAGE_REGISTRY_USERNAME || github.actor }}
+          password: ${{ secrets.IMAGE_REGISTRY_PASSWORD || secrets.GITHUB_TOKEN }}
+
+      - name: Build timestamp
+        id: build-time
+        shell: bash
+        run: |
+          echo "value=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+          echo "dev_tag=dev-$(date -u +%Y%m%d%H%M%S%3N)" >> "$GITHUB_OUTPUT"
+
+      - name: Extract Docker metadata
+        id: meta
+        # docker/metadata-action@v6.0.0
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          # 非 release 默认使用 UTC 时间戳 dev tag，避免只剩 edge/sha 这种弱语义标签。
+          tags: |
+            type=raw,value=${{ steps.build-time.outputs.dev_tag }},enable=${{ github.event_name != 'release' && !startsWith(github.ref, 'refs/tags/v') }}
+            type=ref,event=tag
+            type=raw,value=${{ github.event.release.tag_name }},enable=${{ github.event_name == 'release' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'release' }}
+            type=raw,value=${{ github.event.inputs.image_tag }},enable=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.image_tag != '' }}
+
+      - name: Build and push image
+        id: build
+        # docker/build-push-action@v7.1.0
+        uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f
+        with:
+          context: .
+          # 若 repo 把 worker Dockerfile 放在子目录，这里改路径。
+          file: ./Dockerfile
+          # PR 和普通 push 默认只 build，不自动 push。
+          # 真正 push 的触发时机是：
+          # - release published
+          # - v* tag push
+          # - workflow_dispatch 且 publish=true
+          # - main/master push 且 IMAGE_PUBLISH_ON_MAIN=true
+          push: ${{ env.SHOULD_PUSH == 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # GHA cache 适合作为通用模板默认值。
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            COMMIT_SHA=${{ github.sha }}
+            BUILD_TIME=${{ steps.build-time.outputs.value }}
+            APT_MIRROR_URL=${{ env.APT_MIRROR_URL }}
+            PIP_INDEX_URL=${{ env.PIP_INDEX_URL }}
+            PIP_EXTRA_INDEX_URL=${{ env.PIP_EXTRA_INDEX_URL }}
+            PIP_TRUSTED_HOST=${{ env.PIP_TRUSTED_HOST }}
+
+      - name: Generate artifact attestation
+        if: env.SHOULD_PUSH == 'true' && env.ENABLE_IMAGE_ATTESTATION == 'true'
+        # 若 repo 还没启用 attestation，可通过 ENABLE_IMAGE_ATTESTATION=false 平滑跳过。
+        # 私有/内部仓库上的 attestation 能力可能受 GitHub 套餐限制，不应默认强开。
+        # actions/attest-build-provenance@v4.1.0
+        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true

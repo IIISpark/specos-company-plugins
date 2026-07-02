@@ -1,0 +1,7 @@
+interface:
+  display_name: "ISpark SpecOS Release Ops"
+  short_description: "提交、PR、部署、发布和健康检查流程"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#6e3c9f"
+  default_prompt: "使用 $ispark-release-ops 推进这个提交、发布或部署任务。"
