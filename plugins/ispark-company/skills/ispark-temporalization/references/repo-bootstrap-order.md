@@ -66,17 +66,17 @@ The goal is to avoid building deployment or workflow layers before the repo surf
 
 For a new Python Temporal repo, the minimum standardized template set is:
 
-- `python_temporal_worker.pyproject.toml`
-- `python_temporal_worker.gitignore`
-- `python_temporal_worker.annotated.github-actions.ci.yaml`
-- `python_temporal_worker.annotated.github-actions.codeql.yaml`
+- `worker.pyproject.toml`
+- `worker.gitignore`
+- `worker.gha-ci.yaml`
+- `worker.gha-codeql.yaml`
 
 Add these when the repo is containerized:
 
-- `python_temporal_worker.annotated.Dockerfile`
-- `python_temporal_worker.annotated.github-actions.image.yaml`
-- `python_temporal_worker.annotated.compose.yaml`
-- `python_temporal_worker.annotated.deployment.yaml`
+- `worker.Dockerfile`
+- `worker.gha-image.yaml`
+- `worker.compose.yaml`
+- `worker.deployment.yaml`
 
 ## Normalization Check
 
