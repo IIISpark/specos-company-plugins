@@ -3,7 +3,8 @@
 This repository is the shared source of truth for ISpark SpecOS Codex capabilities.
 It currently publishes the `ispark-company` Codex plugin, which contains company-level
 skills for Agent Harness, engineering workflow, product design, release operations,
-Lark collaboration, review, debugging, browser QA, and Temporal worker work.
+Lark collaboration, evidence-based hiring, review, debugging, browser QA, and Temporal
+worker work.
 
 `DramaWork` or `短剧大师` may appear in downstream workspaces, but they are not this
 repository's identity. The maintainer identity is `ISpark SpecOS`.
