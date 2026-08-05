@@ -11,6 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOTS = [REPO_ROOT / "skills"]
 PLUGIN_SKILLS_ROOT = REPO_ROOT / "plugins" / "ispark-company" / "skills"
 IGNORE_NAMES = {".git", ".hg", ".svn", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
+IGNORE_SUFFIXES = {".pyc", ".pyo"}
 
 
 def find_skill_dirs() -> list[Path]:
@@ -41,7 +42,10 @@ def main() -> int:
         shutil.copytree(
             skill_dir,
             target,
-            ignore=shutil.ignore_patterns(*sorted(IGNORE_NAMES), "*.pyc", "*.pyo"),
+            ignore=shutil.ignore_patterns(
+                *sorted(IGNORE_NAMES),
+                *(f"*{suffix}" for suffix in sorted(IGNORE_SUFFIXES)),
+            ),
         )
         copied.append(skill_dir.name)
 

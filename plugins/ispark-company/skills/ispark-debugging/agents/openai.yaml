@@ -5,3 +5,6 @@ interface:
   icon_large: "./assets/icon.svg"
   brand_color: "#6e3c9f"
   default_prompt: "使用 $ispark-debugging 调查这个异常并给出可验证的根因。"
+
+policy:
+  allow_implicit_invocation: true

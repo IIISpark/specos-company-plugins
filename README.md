@@ -3,8 +3,8 @@
 This repository is the shared source of truth for ISpark SpecOS Codex capabilities.
 It currently publishes the `ispark-company` Codex plugin, which contains company-level
 skills for Agent Harness, engineering workflow, product design, release operations,
-Lark collaboration, evidence-based hiring, review, debugging, browser QA, and Temporal
-worker work.
+writing and editorial quality, Lark collaboration, evidence-based hiring, review,
+debugging, browser QA, and Temporal worker work.
 
 `DramaWork` or `短剧大师` may appear in downstream workspaces, but they are not this
 repository's identity. The maintainer identity is `ISpark SpecOS`.
@@ -95,6 +95,25 @@ Helper:
 python tools/install_or_update.py --action status
 ```
 
+## Discovery And Loading Model
+
+The company plugin is index-first and uses Codex progressive disclosure:
+
+- after the installed plugin is enabled, its bundled skills become eligible for a new
+  chat or CLI session's lightweight name, description, and path index; the host may
+  shorten a very large global skill list to fit its context budget
+- every published company skill explicitly sets `allow_implicit_invocation: true`, so
+  Codex can select it from the task intent; users do not need to type `$skill-name`
+- `$skill-name` remains available as an explicit override for testing or precise routing
+- Codex loads the selected skill's full `SKILL.md` only after selection, and the skill
+  then reads only the references needed for the task
+
+Editing this repository is not an installed plugin update. Rebuild the plugin snapshot,
+bump and publish or otherwise install a distinct plugin version, and start a new chat or
+CLI session before judging discovery. A running session may continue using the version
+it indexed at startup. This follows OpenAI's
+[skill loading model](https://developers.openai.com/codex/skills).
+
 ## Private Repository Access
 
 If the GitHub repository is private, the teammate's local Git/Codex environment must be
@@ -139,6 +158,23 @@ If we later need true role-specific plugin subsets, prefer separate plugins or m
 entries such as `ispark-specos-engineering`, `ispark-specos-product`, or
 `ispark-specos-ops` instead of asking teammates to manually delete bundled skills.
 
+## Writing And Frontend Craft
+
+`ispark-writing` owns reader-facing prose quality across company documents, PRDs,
+decision notes, release communication, collaboration messages, and product copy. It
+supports draft, fact-preserving rewrite, report-only audit, and audience/channel
+adaptation. Artifact structure, source-of-truth placement, release state, collaboration
+side effects, and product decisions remain with their existing owning skills.
+
+`ispark-product-design` includes a scoped frontend craft method for anti-template design,
+report-only visual audit, bounded redesign, and screenshot/URL design study. Real frontend
+acceptance still routes through `ispark-browser-qa`.
+
+Both areas adapt selected methods from Hallmark at pinned upstream commit
+`0a0f706bc0289fef76a07fb854a6a5b031c57901`. The distributed skill references include the
+MIT notice and ISpark modification boundary. The company plugin does not vendor Hallmark's
+theme catalog, `.hallmark/` state, source stamps, or tool assumptions.
+
 ## Maintain And Publish
 
 Before sharing a new version:
@@ -170,10 +206,12 @@ python tools/validate.py
 Validation checks:
 
 - every source skill has valid frontmatter
+- every source skill has resolvable direct reference paths
 - every source skill has Simplified Chinese output guidance
 - every source skill has temporary artifact path guidance
+- every source skill explicitly allows implicit invocation
 - profile entries reference existing source skills
-- plugin snapshot matches source skills
+- plugin snapshot relative paths and byte contents match published source skills
 - plugin logo/icon paths exist
 - skill UI icon paths exist
 - each skill `default_prompt` names its own `$skill`

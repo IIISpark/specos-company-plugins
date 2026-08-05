@@ -7,6 +7,11 @@ import json
 import re
 from pathlib import Path
 
+try:
+    from tools.build_plugin_snapshot import IGNORE_NAMES, IGNORE_SUFFIXES
+except ModuleNotFoundError:
+    from build_plugin_snapshot import IGNORE_NAMES, IGNORE_SUFFIXES
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILLS_ROOT = REPO_ROOT / "skills"
@@ -22,6 +27,10 @@ PERSONAL_PATH_RE = re.compile(r"C:\\Users\\nmg_w|skills-archive")
 OUTPUT_LANGUAGE_RE = re.compile(r"Simplified Chinese|简体中文")
 TEMP_PATH_RE = re.compile(r"working-delta/|\.tmp/|tmp/")
 YAML_STRING_RE = re.compile(r'(?m)^\s*{key}:\s*"([^"]+)"\s*$')
+REFERENCE_PATH_RE = re.compile(r"`(references/[^`]+)`")
+IMPLICIT_INVOCATION_RE = re.compile(
+    r"(?m)^[ \t]+allow_implicit_invocation:[ \t]*true[ \t]*$"
+)
 
 
 def yaml_string(text: str, key: str) -> str | None:
@@ -44,6 +53,45 @@ def find_skill_dirs(root: Path) -> list[Path]:
     if not root.exists():
         return []
     return sorted(path for path in root.iterdir() if path.is_dir() and (path / "SKILL.md").exists())
+
+
+def is_ignored_file(path: Path, root: Path) -> bool:
+    relative = path.relative_to(root)
+    return any(part in IGNORE_NAMES for part in relative.parts) or path.suffix in IGNORE_SUFFIXES
+
+
+def source_skill_files(root: Path) -> dict[str, Path]:
+    files: dict[str, Path] = {}
+    for skill_dir in find_skill_dirs(root):
+        for path in skill_dir.rglob("*"):
+            if path.is_file() and not is_ignored_file(path, root):
+                files[path.relative_to(root).as_posix()] = path
+    return files
+
+
+def snapshot_skill_files(root: Path) -> dict[str, Path]:
+    if not root.exists():
+        return {}
+    return {
+        path.relative_to(root).as_posix(): path
+        for path in root.rglob("*")
+        if path.is_file() and not is_ignored_file(path, root)
+    }
+
+
+def compare_skill_snapshot(source_root: Path, snapshot_root: Path) -> list[str]:
+    source_files = source_skill_files(source_root)
+    snapshot_files = snapshot_skill_files(snapshot_root)
+    errors: list[str] = []
+
+    for relative_path in sorted(source_files.keys() - snapshot_files.keys()):
+        errors.append(f"Plugin snapshot missing file: {relative_path}")
+    for relative_path in sorted(snapshot_files.keys() - source_files.keys()):
+        errors.append(f"Plugin snapshot has extra file: {relative_path}")
+    for relative_path in sorted(source_files.keys() & snapshot_files.keys()):
+        if source_files[relative_path].read_bytes() != snapshot_files[relative_path].read_bytes():
+            errors.append(f"Plugin snapshot content differs: {relative_path}")
+    return errors
 
 
 def profile_skill_names(path: Path) -> list[str]:
@@ -78,14 +126,21 @@ def validate_skills(errors: list[str]) -> set[str]:
             errors.append(f"Missing Simplified Chinese output rule: {skill_file}")
         if not TEMP_PATH_RE.search(text):
             errors.append(f"Missing temporary artifact path rule: {skill_file}")
+        for reference_path in sorted(set(REFERENCE_PATH_RE.findall(text))):
+            if not (skill_dir / reference_path).is_file():
+                errors.append(f"Skill reference does not exist: {skill_file} => {reference_path}")
         agents_file = skill_dir / "agents" / "openai.yaml"
-        if agents_file.exists():
+        if not agents_file.exists():
+            errors.append(f"Missing agents metadata: {agents_file}")
+        else:
             agents_text = agents_file.read_text(encoding="utf-8")
             default_prompt = yaml_string(agents_text, "default_prompt")
             if not default_prompt:
                 errors.append(f"Missing agents default_prompt: {agents_file}")
             elif f"${skill_dir.name}" not in default_prompt:
                 errors.append(f"agents default_prompt must mention ${skill_dir.name}: {agents_file}")
+            if not IMPLICIT_INVOCATION_RE.search(agents_text):
+                errors.append(f"agents metadata must explicitly allow implicit invocation: {agents_file}")
             for key in ("icon_small", "icon_large"):
                 icon_path = yaml_string(agents_text, key)
                 if icon_path:
@@ -149,6 +204,7 @@ def validate_plugin(skill_names: set[str], errors: list[str]) -> None:
         errors.append(f"Plugin snapshot missing skill: {name}")
     for name in sorted(plugin_skill_names - skill_names):
         errors.append(f"Plugin snapshot has unknown skill: {name}")
+    errors.extend(compare_skill_snapshot(SKILLS_ROOT, PLUGIN_SKILLS_ROOT))
 
 
 def main() -> int:

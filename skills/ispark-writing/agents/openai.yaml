@@ -1,0 +1,7 @@
+interface:
+  display_name: "ISpark SpecOS Writing"
+  short_description: "保持事实边界并改进公司写作的具体性、语气选择和读者适配能力"
+  default_prompt: "使用 $ispark-writing 起草、改写或审计这段文字，同时保持事实边界。"
+
+policy:
+  allow_implicit_invocation: true

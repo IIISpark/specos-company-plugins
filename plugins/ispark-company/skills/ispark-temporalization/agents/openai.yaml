@@ -5,3 +5,6 @@ interface:
   icon_large: "./assets/icon.svg"
   brand_color: "#6e3c9f"
   default_prompt: "使用 $ispark-temporalization 评估、初始化或规范这个 Python Temporal worker。"
+
+policy:
+  allow_implicit_invocation: true

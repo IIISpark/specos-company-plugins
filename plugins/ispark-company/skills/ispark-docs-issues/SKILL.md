@@ -1,6 +1,6 @@
 ---
 name: ispark-docs-issues
-description: Use when writing or updating durable docs, PRDs, release notes, PDFs, issue breakdowns, triage, GitHub issue resolution, or converting plans into trackable work.
+description: Use when structuring or maintaining durable docs, PRDs, release notes, PDFs, issue breakdowns, triage, GitHub issue resolution, or converting plans into trackable work. Use ispark-writing for prose-only drafting, rewriting, tone adaptation, or anti-slop audit.
 ---
 
 # ISpark Docs And Issues
@@ -13,6 +13,7 @@ Use this for durable written artifacts and issue workflows.
 - PRD and planning docs: read `references/prd.md`.
 - Issue breakdown, triage, or GitHub issue resolution: read `references/issues.md`.
 - PDF output: read `references/pdf.md`.
+- Prose drafting, rewriting, tone, or anti-slop audit: use `$ispark-writing`; keep artifact structure and fact placement here.
 
 ## Defaults
 

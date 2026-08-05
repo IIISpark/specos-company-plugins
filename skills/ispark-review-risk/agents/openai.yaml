@@ -5,3 +5,6 @@ interface:
   icon_large: "./assets/icon.svg"
   brand_color: "#6e3c9f"
   default_prompt: "使用 $ispark-review-risk 审查这份代码、计划或风险边界。"
+
+policy:
+  allow_implicit_invocation: true

@@ -5,3 +5,6 @@ interface:
   icon_large: "./assets/icon.svg"
   brand_color: "#6e3c9f"
   default_prompt: "使用 $ispark-release-ops 推进这个提交、发布或部署任务。"
+
+policy:
+  allow_implicit_invocation: true

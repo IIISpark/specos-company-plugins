@@ -13,6 +13,7 @@ Use this for real branch closure and deployment work. Release claims need exact 
 - Ship or deploy: read `references/deploy.md`.
 - Health checks and smoke tests: read `references/health.md`.
 - Long-running release checkpoints: read `references/checkpoints.md`.
+- Release-note or announcement prose: use `$ispark-writing`; keep branch, artifact, rollout, and smoke facts here.
 
 ## Defaults
 

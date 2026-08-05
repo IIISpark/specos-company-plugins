@@ -13,6 +13,7 @@ Use this as the company Lark router. Read the narrowest reference before calling
 - Docs/Drive/Sheets/Base/Wiki/Slides/Markdown: read `references/content.md`.
 - IM/Contact/Calendar/Task/VC/Minutes/Note/Mail: read `references/collaboration.md`.
 - Apps, events, approvals, attendance, OKR, whiteboard, OpenAPI gaps: read `references/advanced.md`.
+- Drafting or adapting reader-facing prose before a collaboration action: use `$ispark-writing`; keep resource routing and side effects here.
 
 ## Defaults
 
