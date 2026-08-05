@@ -66,6 +66,16 @@ def install_plugin(codex: str, plugin: str, marketplace: str) -> None:
     run([codex, "plugin", "add", f"{plugin}@{marketplace}"])
 
 
+def update_marketplace(codex: str, marketplace: str) -> None:
+    result = run([codex, "plugin", "marketplace", "upgrade", marketplace], check=False)
+    if result.returncode == 0:
+        return
+    if "is not configured as a Git marketplace" in result.stderr:
+        print("Marketplace is local; its source is already current.")
+        return
+    raise SystemExit(result.returncode)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--action", choices=["install", "update", "status"], default="install")
@@ -86,7 +96,7 @@ def main() -> int:
     if args.marketplace not in names:
         add_marketplace(codex, args.source, args.ref)
     elif args.action == "update":
-        run([codex, "plugin", "marketplace", "upgrade", args.marketplace])
+        update_marketplace(codex, args.marketplace)
     else:
         print(f"Marketplace already configured: {args.marketplace}")
 

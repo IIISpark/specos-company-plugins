@@ -17,6 +17,7 @@ artifacts:
   - "profiles/*.yml"
   - "plugins/ispark-company/skills/"
   - "tools/build_plugin_snapshot.py"
+  - "tools/install_or_update.py"
   - "tools/validate.py"
   - "tools/tests/test_validate.py"
   - "README.md"
@@ -29,6 +30,8 @@ artifacts:
 `ispark-product-design` 新增前端 craft reference，用于反模板设计、只读视觉审计、受边界约束的 redesign 和截图/URL design study。Hallmark 基线固定为 `0a0f706bc0289fef76a07fb854a6a5b031c57901`，MIT notice 随两个派生 skill 的 plugin snapshot 分发。
 
 全部 12 个公司 skill 现在显式允许 implicit invocation。`tools/validate.py` 同时校验 skill 直接引用、调用策略，以及 source 和 plugin snapshot 的相对路径与字节内容；回归测试覆盖同名 skill 的陈旧 snapshot、缺失/多余文件和构建忽略项。
+
+本机 marketplace 为 local source 时，更新 helper 会跳过不适用的 Git marketplace upgrade，并继续重新安装当前 plugin version；Git marketplace 的失败仍会正常中止。
 
 # Why it matters
 

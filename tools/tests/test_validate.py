@@ -3,7 +3,10 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from subprocess import CompletedProcess
+from unittest.mock import patch
 
+from tools.install_or_update import update_marketplace
 from tools.validate import compare_skill_snapshot
 
 
@@ -68,6 +71,36 @@ class CompareSkillSnapshotTests(unittest.TestCase):
         ignored_file.write_bytes(b"ignored")
 
         self.assertEqual(compare_skill_snapshot(self.source_root, self.snapshot_root), [])
+class UpdateMarketplaceTests(unittest.TestCase):
+    @patch("tools.install_or_update.run")
+    def test_local_marketplace_skips_git_upgrade_error(self, run_mock: object) -> None:
+        run_mock.return_value = CompletedProcess(
+            args=["codex", "plugin", "marketplace", "upgrade", "ispark-company"],
+            returncode=1,
+            stdout="",
+            stderr="Error: marketplace `ispark-company` is not configured as a Git marketplace",
+        )
+
+        update_marketplace("codex", "ispark-company")
+
+        run_mock.assert_called_once_with(
+            ["codex", "plugin", "marketplace", "upgrade", "ispark-company"],
+            check=False,
+        )
+
+    @patch("tools.install_or_update.run")
+    def test_other_marketplace_upgrade_error_stops(self, run_mock: object) -> None:
+        run_mock.return_value = CompletedProcess(
+            args=["codex", "plugin", "marketplace", "upgrade", "ispark-company"],
+            returncode=1,
+            stdout="",
+            stderr="Error: network unavailable",
+        )
+
+        with self.assertRaises(SystemExit) as error:
+            update_marketplace("codex", "ispark-company")
+
+        self.assertEqual(error.exception.code, 1)
 
 
 if __name__ == "__main__":
