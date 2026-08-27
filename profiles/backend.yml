@@ -1,9 +1,11 @@
 skills:
   - ispark-dev-workflow
   - ispark-debugging
+  - ispark-codebase-understanding
   - ispark-review-risk
   - ispark-browser-qa
   - ispark-docs-issues
+  - ispark-anti-slop
   - ispark-writing
   - ispark-lark
   - ispark-release-ops

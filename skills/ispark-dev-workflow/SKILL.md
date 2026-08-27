@@ -1,6 +1,6 @@
 ---
 name: ispark-dev-workflow
-description: Use when implementing code, planning multi-step development, choosing a worktree strategy, deciding test scope, updating architecture safely, preparing handoffs, or verifying before claiming engineering work is complete.
+description: Use for engineering specs and implementation, including multi-step plans, TDD/test scope, worktree choice, safe module changes, minimal refactors, and completion verification. For docs-only use ispark-docs-issues, review-only use ispark-review-risk, and broad unfamiliar-codebase reconnaissance use ispark-codebase-understanding.
 ---
 
 # ISpark Dev Workflow
@@ -9,10 +9,11 @@ Use this for normal engineering work. Keep the task scoped, read local project f
 
 ## Route
 
-- Planning or task brief: read `references/planning.md`.
-- Implementation and tests: read `references/testing.md`.
+- Requirement clarification, engineering spec, or task brief: read `references/planning.md`.
+- Implementation, regression tests, or TDD: read `references/testing.md`.
 - Worktree or branch isolation: read `references/worktrees.md`.
-- Architecture or refactor decisions: read `references/architecture.md`.
+- Domain terminology, module interface, architecture, or refactor decisions: read `references/architecture.md`.
+- Minimal implementation and over-defensive-code review: read `references/code-minimalism.md`.
 - Completion evidence or handoff: read `references/verification.md`.
 
 ## Defaults
@@ -21,6 +22,7 @@ Use this for normal engineering work. Keep the task scoped, read local project f
 - Put temporary analysis, plans, and working documents under the repo's `working-delta/` when present; use `.tmp/` or `tmp/` for disposable command output. Do not create Superpowers, hidden assistant, or arbitrary home-directory document paths.
 - Prefer local README/docs/config/code over generic assumptions.
 - Make the smallest implementation that satisfies the stated outcome.
+- Treat speculative null checks, defaults, retries, fallbacks, compatibility branches, wrappers, and abstractions as review candidates. Keep a branch only when a reproduced failure, documented contract, security boundary, or focused test justifies it.
 - Do not change public contracts, schemas, auth, privacy, deploy, or destructive behavior without explicit approval.
 - Preserve unrelated user changes.
 - Report exact verification commands and results.

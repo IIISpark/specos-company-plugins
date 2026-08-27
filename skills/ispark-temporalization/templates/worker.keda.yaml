@@ -8,12 +8,12 @@ apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
   name: your-module-activity-io-worker
-  namespace: dramawork
+  namespace: your-namespace
   labels:
     app.kubernetes.io/name: your-module-activity-io-worker
     app.kubernetes.io/component: temporal-worker
-    dramawork.io/worker-role: activity-io
-    dramawork.io/capacity-profile: activity-io
+    your-org.io/worker-role: activity-io
+    your-org.io/capacity-profile: activity-io
 spec:
   # REQUIRED TO REPLACE:
   # - target a Deployment that owns one coherent worker role.
@@ -47,7 +47,7 @@ spec:
       metadata:
         # REQUIRED TO REPLACE:
         # - task queue should match the activity queue owned by this worker role.
-        namespace: default
+        namespace: your-namespace
         taskQueue: your-module.activity.io
         queueTypes: activity
         # REQUIRED TO REVIEW:
@@ -64,7 +64,7 @@ spec:
       metadata:
         # REQUIRED TO REPLACE:
         # - point at the environment's Prometheus service.
-        serverAddress: http://prometheus-operated.monitoring.svc.cluster.local:9090
+        serverAddress: http://prometheus.<monitoring-namespace>.svc.cluster.local:9090
         # REQUIRED TO REPLACE:
         # - query must return one 0/1 vector/scalar for the provider/model scope
         #   this worker role consumes.

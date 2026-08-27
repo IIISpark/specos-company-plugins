@@ -1,0 +1,10 @@
+interface:
+  display_name: "ISpark SpecOS Codebase Understanding"
+  short_description: "快速建立大型陌生代码库的证据地图"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#2f6f62"
+  default_prompt: "使用 $ispark-codebase-understanding 建立这个陌生代码库的边界、入口与执行流地图。"
+
+policy:
+  allow_implicit_invocation: true

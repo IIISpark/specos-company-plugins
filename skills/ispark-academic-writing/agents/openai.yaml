@@ -1,0 +1,10 @@
+interface:
+  display_name: "ISpark SpecOS Academic Writing"
+  short_description: "保护论文引用、公式、术语和论证边界并降低学术套话"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#2e6f62"
+  default_prompt: "使用 $ispark-academic-writing 修订这段学术文字，同时保留引用、公式和 claim strength。"
+
+policy:
+  allow_implicit_invocation: true

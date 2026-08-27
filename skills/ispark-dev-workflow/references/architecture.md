@@ -10,3 +10,20 @@ Root-cause rule:
 
 For shared interfaces, database schema, auth, privacy, or deployment contracts: stop and ask before changing.
 
+## Domain model and module depth
+
+Keep three artifacts distinct:
+
+- domain language defines business concepts and their relationships without encoding
+  current implementation details
+- an engineering spec defines desired behavior and acceptance
+- an ADR records a consequential architecture decision and its tradeoffs
+
+Challenge vague terms with concrete scenarios and cross-check them against both the
+authoritative docs and code. Record an ADR sparingly; routine implementation choices do
+not need permanent decision records.
+
+A module interface includes more than a type signature: callers may also depend on
+invariants, ordering, error behavior, configuration, and performance characteristics.
+Prefer a small, stable interface that hides meaningful complexity. Do not manufacture a
+wrapper or shallow abstraction merely to make the directory tree look modular.

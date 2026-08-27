@@ -17,3 +17,14 @@ Company skill rules:
 - validate with `tools/validate.ps1`
 
 Use forward testing for complex or high-risk skills before making them stable.
+
+When absorbing an external skill collection, decide in this order:
+
+1. Merge the method into an existing owner when the trigger and outcome already belong there.
+2. Create a new skill only for a distinct, recurring task with a discriminating description.
+3. Keep a source as research-only when its runtime, credentials, license, or autonomous
+   behavior would broaden company authority or context cost.
+
+Record provenance and license decisions, but rewrite guidance around ISpark contracts
+instead of copying a repository wholesale. Test positive routing, nearby negative
+boundaries, reference reachability, and generated snapshot equality.

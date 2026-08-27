@@ -8,9 +8,8 @@ Use profile-based sync:
 - `ops`
 - `product`
 - `agent-maintainer`
-- `dramawork`
+- `project-specific`
 
 The installer manages only `ispark-*` folders. It must not edit or delete personal skills.
 
 Prefer copy mode for Windows reliability. Symlinks can be added later for maintainers.
-

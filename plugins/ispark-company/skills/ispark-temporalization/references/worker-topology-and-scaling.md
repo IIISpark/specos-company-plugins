@@ -56,7 +56,7 @@ Do not make "one workflow equals one Pod" the default. The normal production uni
 - Owns DB writes, registry/apply logic, package/manifest state updates, and idempotent durable mutations.
 - Concurrency must align with DB pool, lock/key strategy, transaction shape, and write ordering.
 - Scales only when backing-store pressure confirms it is safe.
-- Obey project-specific DB boundaries. In DramaWork, algo workers must not access DB; algo `activity-state` means package/manifest/registry/object-store state, while business workflow/worker owns DB writes.
+- Obey project-specific DB boundaries. Algorithm workers must not access the business DB; algorithm `activity-state` means package/manifest/registry/object-store state, while the business workflow/worker owns DB writes.
 
 ### `activity-heavy`
 

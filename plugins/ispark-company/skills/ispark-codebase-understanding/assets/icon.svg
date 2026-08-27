@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Codebase map">
+  <rect width="64" height="64" rx="14" fill="#eaf4f1"/>
+  <path d="M18 18h12v10H18zM36 36h12v10H36zM16 42h10M30 23h8c5 0 8 3 8 8v5M26 42h10" fill="none" stroke="#2f6f62" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="19" cy="42" r="7" fill="#fff" stroke="#2f6f62" stroke-width="4"/>
+</svg>

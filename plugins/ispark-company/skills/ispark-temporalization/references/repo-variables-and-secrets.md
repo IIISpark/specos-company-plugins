@@ -62,7 +62,7 @@ Configure these under:
 - `IMAGE_REGISTRY`
   - Example: `ghcr.io`, `harbor.example.com`, `123456789.dkr.ecr.us-west-2.amazonaws.com`
 - `IMAGE_REPOSITORY`
-  - Example: `dramawork/artbook-worker`
+  - Example: `your-org/your-worker`
 - `IMAGE_REGISTRY_USERNAME`
   - Example: `ci-bot`
 - `IMAGE_PUBLISH_ON_MAIN`
@@ -77,9 +77,9 @@ Configure these under:
 - `PIP_INDEX_URL`
   - Example: `https://pypi.org/simple`
 - `PIP_EXTRA_INDEX_URL`
-  - Example: `https://pypi.company.internal/simple`
+  - Example: `https://<private-index-host>/simple`
 - `PIP_TRUSTED_HOST`
-  - Example: `pypi.company.internal`
+  - Example: `<private-index-host>`
 
 ## Recommended GitHub Actions Secrets
 

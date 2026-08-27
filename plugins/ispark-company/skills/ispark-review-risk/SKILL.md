@@ -1,6 +1,6 @@
 ---
 name: ispark-review-risk
-description: Use when reviewing code or plans, challenging architecture, assessing security or privacy risk, checking destructive operations, evaluating public contracts, or deciding whether a local patch is hiding a deeper problem.
+description: Use for review-only findings on code/diffs, plans, architecture, security/privacy, destructive actions, public contracts, structural root causes, or generated-code risk, including audit-context building before threat review. For implementation use ispark-dev-workflow; for neutral large-codebase mapping use ispark-codebase-understanding.
 ---
 
 # ISpark Review And Risk
@@ -10,6 +10,8 @@ Use this skill to slow down decisions that can create long-term or operational d
 ## Route
 
 - Code review: read `references/code-review.md`.
+- Unfamiliar-code security, threat-model, or architecture audit: first read `references/audit-context.md`.
+- Generated-code or over-defensive branch review: also read `references/code-review.md` and inspect the branch evidence.
 - Plan or product critique: read `references/plan-review.md`.
 - Security/privacy/contracts: read `references/security-contracts.md`.
 - Destructive or high-side-effect actions: read `references/destructive-actions.md`.

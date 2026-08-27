@@ -1,0 +1,10 @@
+interface:
+  display_name: "ISpark SpecOS Anti-Slop"
+  short_description: "按领域降低写作、界面和代码的模板化 AI 味"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#a14350"
+  default_prompt: "使用 $ispark-anti-slop 识别并收窄这份输出的模板化或 AI 味风险。"
+
+policy:
+  allow_implicit_invocation: true

@@ -2,9 +2,10 @@
 
 This repository is the shared source of truth for ISpark SpecOS Codex capabilities.
 It currently publishes the `ispark-company` Codex plugin, which contains company-level
-skills for Agent Harness, engineering workflow, product design, release operations,
-writing and editorial quality, Lark collaboration, evidence-based hiring, review,
-debugging, browser QA, and Temporal worker work.
+skills for Agent Harness, engineering workflow, large-codebase understanding, React/Next
+performance, product design, release operations, writing and editorial quality, academic
+writing, cross-domain anti-slop review, Lark collaboration, evidence-based hiring,
+review, debugging, browser QA, and Temporal worker work.
 
 `DramaWork` or `短剧大师` may appear in downstream workspaces, but they are not this
 repository's identity. The maintainer identity is `ISpark SpecOS`.
@@ -134,6 +135,7 @@ Fallback profiles exist for direct skill-root installs:
 - `product`
 - `agent-maintainer`
 - `dramawork`
+- `research`
 
 Use fallback sync only when plugin installation is unavailable:
 
@@ -174,6 +176,40 @@ Both areas adapt selected methods from Hallmark at pinned upstream commit
 `0a0f706bc0289fef76a07fb854a6a5b031c57901`. The distributed skill references include the
 MIT notice and ISpark modification boundary. The company plugin does not vendor Hallmark's
 theme catalog, `.hallmark/` state, source stamps, or tool assumptions.
+
+For direct-install research work, use the `research` fallback profile so academic
+preservation rules are available without adding scholarly defaults to unrelated roles.
+
+## Anti-AI-Slop And Academic Quality
+
+`ispark-anti-slop` is the cross-domain entry for explicit requests to reduce generic,
+template-like, or over-smoothed output. It routes instead of replacing the owning skill:
+`ispark-writing` handles ordinary prose, `ispark-academic-writing` protects scholarly
+notation and claim scope, `ispark-product-design` handles visual intent, and
+`ispark-dev-workflow`/`ispark-review-risk` handle minimal code and failure visibility.
+The source review and non-vendoring boundary are recorded in
+[`docs/anti-ai-slop-integration.md`](docs/anti-ai-slop-integration.md).
+
+This quality layer is not an authorship detector and does not promise detector evasion.
+It preserves facts, contracts, accessibility, security, academic evidence, and useful
+formal structure; it treats pattern hits as review signals rather than bans.
+
+Discovery uses a short-circuit rule: a clear single-domain task loads its owner directly;
+`ispark-anti-slop` loads the routing matrix only for mixed, ambiguous, or cross-domain
+audits, with at most two owner skills for the current decision.
+
+## Engineering Understanding And React Performance
+
+External engineering-method repositories are integrated selectively. Planning, TDD,
+debugging, review, verification, code simplification, and parallel-agent methods stay
+under their existing owner skills. `ispark-codebase-understanding` is a separate,
+read-first entry only for broad unfamiliar-codebase reconnaissance;
+`ispark-react-performance` is a separate entry only for React/Next implementation
+performance and component APIs. Visual intent remains with `ispark-product-design`, and
+rendered acceptance remains with `ispark-browser-qa`.
+
+Pinned upstream commits, licenses, rejected runtimes, and loading boundaries are recorded
+in [`docs/candidate-skill-integration.md`](docs/candidate-skill-integration.md).
 
 ## Maintain And Publish
 

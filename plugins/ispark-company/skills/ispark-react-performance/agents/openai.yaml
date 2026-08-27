@@ -1,0 +1,10 @@
+interface:
+  display_name: "ISpark SpecOS React Performance"
+  short_description: "React 与 Next.js 性能和组件架构"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#176b87"
+  default_prompt: "使用 $ispark-react-performance 优化这个 React/Next.js 路径的性能或组件 API。"
+
+policy:
+  allow_implicit_invocation: true

@@ -56,4 +56,4 @@ Respect existing brand language before introducing a new voice. Prefer specific 
 
 ## Academic or research prose
 
-This skill may improve clarity and structure, but it is not an academic authority. The canonical manuscript, evidence protocol, citation rules, and claim denominators remain with the target project. Never add citations, results, novelty claims, or causal language from general knowledge alone.
+For thesis, paper, abstract, method, results, discussion, conclusion, or rebuttal editing, route to `$ispark-academic-writing`. This skill only preserves the boundary when an otherwise mixed artifact contains scholarly prose. The canonical manuscript, evidence protocol, citation rules, and claim denominators remain with the target project. Never add citations, results, novelty claims, or causal language from general knowledge alone.

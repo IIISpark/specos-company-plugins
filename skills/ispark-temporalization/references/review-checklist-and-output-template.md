@@ -173,7 +173,7 @@ Check at least these items:
 - activity profiles are classified by boundary rather than by module name. Video generation and video evaluation can contain both IO-bound provider calls and CPU/memory-heavy media processing activities.
 - LLM/provider/model activities align to one logical provider call or bounded homogeneous shard when retry value, resource profile, or side effects differ.
 - Coarse "stage" activities do not wrap multiple independent long-tail provider calls just to simplify the workflow graph.
-- project-specific data boundaries are enforced. For DramaWork, algo workers must not add DB access; business workflow/worker owns business DB writes.
+- project-specific data boundaries are enforced. Algorithm workers must not add business DB access; the business workflow/worker owns business DB writes.
 
 Common findings for this section:
 
@@ -258,7 +258,7 @@ Common findings:
 
 Check these items:
 
-- worker deployment declares `DRAMAWORK_ACTIVITY_TMPDIR` or the repo's canonical equivalent
+- worker deployment declares `ACTIVITY_TMPDIR` or the repo's canonical equivalent
 - activity local work is created under an explicit managed tmp root, preferably one per activity attempt
 - local workspace creation is run-scoped or attempt-scoped enough to avoid collisions across concurrent attempts
 - local workspace cleanup uses `try/finally` / context manager semantics and best-effort cleanup on success/failure
@@ -271,7 +271,7 @@ Check these items:
 - package-local canonical members and retained audit members are separated, for example `sections/` and `audit/`
 - `package_ref` points to the bundle root, usually `package.json`
 - local path refs are rejected at public workflow/package boundaries unless the module is explicitly local-only
-- for DramaWork-compatible algo workers, active deploy/config does not depend on bare `/scratch`; activity-local storage lives under `/var/tmp/dramawork/activity-workspaces`
+- active deploy/config does not depend on bare `/scratch`; activity-local storage lives under a managed root such as `/var/tmp/<project>/activity-workspaces`
 
 Common findings:
 
@@ -369,31 +369,31 @@ Check these items:
 - public progress is business-meaningful and separated from heartbeat/log/provider noise
 - outward progress signal payload has a stable name and typed payload
 - outward progress `event_id` is a scoped idempotency key, not Temporal execution identity
-- DramaWork-compatible progress `event_id` is `<= 64` and has a production-shaped workflow ID regression test
+- project-compatible progress `event_id` is `<= 64` and has a production-shaped workflow ID regression test
 - `event_id` does not include full `workflow_id`, `source_workflow_id`, Temporal run ID, object-store key, long request namespace, provider payload field, current time, or random value
 - full execution identity remains available through dedicated fields such as `workflow_id`, `source_workflow_id`, `temporal_workflow_id`, `temporal_run_id`, execution context, or correlation links
 - every provider/LLM logical call or shard carries locatable identity: run ID, target ID when known, attempt ID, workflow/activity name, provider request ID when available, and trace context
 - Provider Gateway create calls send required audit headers when available:
-  - `X-DW-Project-Id`
-  - `X-DW-Run-Id`
-  - `X-DW-Billing-Subject-Type`
-  - `X-DW-Billing-Subject-Id`
+  - `X-Project-Id`
+  - `X-Run-Id`
+  - `X-Billing-Subject-Type`
+  - `X-Billing-Subject-Id`
 - optional drilldown headers are propagated when known:
-  - `X-DW-Target-Id`
-  - `X-DW-Attempt-Id`
-  - `X-DW-Workflow-Node-Id`
-  - `X-DW-Temporal-Workflow-Id`
-  - `X-DW-Temporal-Run-Id`
-  - `X-DW-Workflow-Name`
-  - `X-DW-Activity-Name`
-  - `X-DW-Caller-Service`
-  - `X-DW-Resource-Refs`
-  - `X-DW-Parent-Request-Id`
+  - `X-Target-Id`
+  - `X-Attempt-Id`
+  - `X-Workflow-Node-Id`
+  - `X-Temporal-Workflow-Id`
+  - `X-Temporal-Run-Id`
+  - `X-Workflow-Name`
+  - `X-Activity-Name`
+  - `X-Caller-Service`
+  - `X-Resource-Refs`
+  - `X-Parent-Request-Id`
   - `traceparent`
   - `tracestate`
-- provider create idempotency uses the project standard, for DramaWork: `dw:v2:<caller_service>:<create_purpose>:<run_id>:<target_id|run-scope>:<attempt_id>`
+  - provider create idempotency uses the project standard, for example: `<idempotency-prefix>:v2:<caller_service>:<create_purpose>:<run_id>:<target_id|run-scope>:<attempt_id>`
 - provider create idempotency never uses `request_id`, trace/span IDs, Temporal run ID, current time, random IDs, provider IDs, LLM output IDs, filenames, or directories
-- `X-DW-Idempotency-Key` is sent only for create calls, not query/cancel/finalize calls
+- `X-Idempotency-Key` is sent only for create calls, not query/cancel/finalize calls
 - logs/metrics/traces include activity retry, timeout, provider status, schedule-to-start, worker saturation, and backing-store pressure where relevant
 
 Common findings:
@@ -481,7 +481,7 @@ Check at least these items:
 - helper workflows and activities do not accidentally become public progress surfaces
 - provider request IDs, operation IDs, attempt indexes, shard indexes, and trace context are retained for diagnostics without becoming public workflow progress fields unless the product contract explicitly requires them
 - outward progress `event_id` is treated as a scoped idempotency key, not Temporal execution identity
-- outward progress `event_id` length is bounded by the downstream Business contract; for DramaWork-compatible modules this means `event_id <= 64`
+- outward progress `event_id` length is bounded by the downstream business contract; for this contract family it means `event_id <= 64`
 - outward progress `event_id` does not contain full `workflow_id`, `source_workflow_id`, Temporal run ID, object-store key, long request namespace, provider payload field, current time, or random value
 - full execution identity remains available through dedicated fields such as `workflow_id`, `source_workflow_id`, `temporal_workflow_id`, `temporal_run_id`, execution context, or correlation links
 - progress emitters have production-shaped workflow ID tests proving the emitted `event_id` is short and does not embed full execution identity

@@ -12,7 +12,7 @@ metadata:
   # - deployment name
   name: your-module-worker
   # REQUIRED TO REPLACE if your cluster uses another namespace.
-  namespace: dramawork
+  namespace: your-namespace
   labels:
     # REQUIRED TO REPLACE:
     # - keep labels aligned with the real module/deployment identity
@@ -21,9 +21,9 @@ metadata:
     # RECOMMENDED:
     # - keep these labels aligned with the config-driven worker role.
     # - they are labels for observation/routing, not the source of truth.
-    dramawork.io/worker-role: combined-small
-    dramawork.io/task-queue: your-module.workflow
-    dramawork.io/capacity-profile: combined-small
+    your-org.io/worker-role: combined-small
+    your-org.io/task-queue: your-module.workflow
+    your-org.io/capacity-profile: combined-small
 spec:
   # OPTIONAL:
   # - `1` is the neutral default for a worker template.
@@ -46,9 +46,9 @@ spec:
         # REQUIRED TO REPLACE:
         app.kubernetes.io/name: your-module-worker
         app.kubernetes.io/component: temporal-worker
-        dramawork.io/worker-role: combined-small
-        dramawork.io/task-queue: your-module.workflow
-        dramawork.io/capacity-profile: combined-small
+        your-org.io/worker-role: combined-small
+        your-org.io/task-queue: your-module.workflow
+        your-org.io/capacity-profile: combined-small
     spec:
       # OPTIONAL BUT RECOMMENDED:
       # - keep this explicit for graceful worker shutdown.

@@ -25,5 +25,12 @@ python tools/sync_profile.py --action dry-run --profile engineer
 - Use descriptions as the discovery index and explicitly allow implicit invocation;
   load full instructions and references only after routing.
 - Preserve personal skills: installers manage only `ispark-*` folders.
+- Anti-slop is layered: use `ispark-anti-slop` to route, then let writing, academic,
+  product-design, browser-QA, dev-workflow, and review-risk skills own their boundaries.
+- Broad codebase scouting and React/Next performance have narrow entry skills; planning,
+  TDD, debugging, review, verification, and subagent methods stay with existing owners.
+- Keep reusable skill templates project-neutral: use placeholders for namespaces, hosts,
+  paths, headers, and deployment labels; target-repository facts supply real values.
 
-See `README.md` for install, update, validation, and maintainer workflows.
+See `README.md`, `docs/anti-ai-slop-integration.md`, and
+`docs/candidate-skill-integration.md` for install, validation, and method boundaries.

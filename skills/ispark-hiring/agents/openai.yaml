@@ -1,6 +1,9 @@
 interface:
   display_name: "ISpark Hiring Loop"
   short_description: "从岗位定位到候选人筛选、面试、面后复盘与决策的招聘闭环"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#3d6395"
   default_prompt: "使用 $ispark-hiring 从岗位定位开始建立可追溯的招聘闭环。"
 
 policy:

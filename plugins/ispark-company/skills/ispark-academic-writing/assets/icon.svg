@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Academic writing">
+  <rect width="64" height="64" rx="14" fill="#eaf5f1"/>
+  <path d="M18 12h20l10 10v30H18z" fill="#fff" stroke="#2e6f62" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M38 12v11h10M25 32h16M25 40h16M25 48h10" fill="none" stroke="#2e6f62" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

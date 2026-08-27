@@ -143,7 +143,9 @@ def validate_skills(errors: list[str]) -> set[str]:
                 errors.append(f"agents metadata must explicitly allow implicit invocation: {agents_file}")
             for key in ("icon_small", "icon_large"):
                 icon_path = yaml_string(agents_text, key)
-                if icon_path:
+                if not icon_path:
+                    errors.append(f"Missing agents {key}: {agents_file}")
+                else:
                     validate_relative_asset(skill_dir, icon_path, agents_file, errors)
     return skill_names
 

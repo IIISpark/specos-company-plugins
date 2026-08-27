@@ -17,3 +17,22 @@ Use a written brief for complex agentic work:
 
 Do not over-specify implementation steps unless the sequence itself is a requirement or risk control.
 
+## From requirements to an engineering spec
+
+Synthesize the current conversation and local facts before asking questions. Separate:
+
+- confirmed requirements and existing contracts
+- assumptions that are safe and reversible
+- open questions whose answers change architecture, public behavior, data, or release scope
+
+When enough evidence exists, write the spec directly. Ask only for the smallest missing
+decision when multiple reasonable interpretations would materially change the result.
+
+A useful engineering spec states the problem, desired observable behavior, acceptance
+criteria, important implementation decisions, testing decisions, and out-of-scope work.
+Keep unstable file paths and code snippets in the implementation plan rather than the
+durable product or domain spec.
+
+Decompose complex work by independently verifiable behavior or contract boundary. Avoid
+plans that are only lists of files to edit, and do not turn an issue tracker or planning
+artifact into an authority that overrides repository facts.

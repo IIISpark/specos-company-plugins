@@ -132,7 +132,7 @@ Interpretation:
   - replicas handle horizontal fleet size
   - task queue, provider, and backing-store rate limits protect shared systems
 - Treat provider quota as dynamic capacity. Static worker config may name the provider domain / model family, but should not require per-upstream `max_concurrency`; live concurrency/rate/budget should be inferred by provider-gateway runtime feedback and exposed through provider-gateway metrics or a capacity control plane when available.
-- Obey project DB boundaries. In DramaWork, algo workers do not access DB; `activity-state` in algo means package/manifest/registry/object-store state, while business workflow/worker owns business DB writes.
+- Obey project DB boundaries. Algorithm workers do not access the business DB; `activity-state` in an algorithm module means package/manifest/registry/object-store state, while the business workflow/worker owns business DB writes.
 - Tune in order: fan-out window, worker slots/executor, poller behavior, rate limits, replicas/autoscaler, then adaptive feedback loops.
 - Do not mix WorkerTuner/resource-based slot suppliers with legacy `max_concurrent_*` style limits in the same worker.
 - Do not raise activity slots or replicas without checking provider/backing-store pressure.
@@ -192,7 +192,7 @@ If a module persists immutable run-preparation metadata, keep that as an interna
 Make `progress_target_workflow_id` mandatory on every module public workflow input so upward progress communication can be added later without breaking the public contract.
 For outward progress signals, keep progress event identity separate from Temporal execution identity:
 - `event_id` is a scoped idempotency key in the run / target / attempt context, not a workflow execution identity.
-- In DramaWork-compatible modules, outward progress `event_id` must be stable and `<= 64` characters.
+- In compatible modules, outward progress `event_id` must be stable and `<= 64` characters.
 - Do not include full `workflow_id`, `source_workflow_id`, Temporal run ID, object-store key, long request namespace, provider payload field, current time, or random value in `event_id`.
 - Put full execution identity in dedicated fields such as `workflow_id`, `source_workflow_id`, `temporal_workflow_id`, `temporal_run_id`, execution context, or correlation links.
 - Progress emitters need production-shaped workflow ID tests that prove `event_id` stays short and does not embed the full execution identity.

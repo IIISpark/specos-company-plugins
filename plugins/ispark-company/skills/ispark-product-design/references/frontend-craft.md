@@ -12,6 +12,30 @@ Classify the surface:
 - Public, brand, portfolio, venue, or product page: let the subject and content determine structure; avoid the default hero, equal feature cards, CTA, footer sequence.
 - Component: preserve the surrounding system and implement only states that the component contract can actually enter.
 
+## Anti-template audit
+
+When the user asks to reduce UI "AI 味", inspect both the source and the rendered page when a browser is available. Mark each finding as:
+
+- `source-certain`: a literal class, token, import, copy string, or missing state is visible in code.
+- `render-observed`: hierarchy, palette dominance, spacing rhythm, contrast, overflow, or motion is visible in the browser.
+- `inferred`: a visual judgment made without a render; lower its confidence and say so.
+
+Prioritize by consequence rather than by fashion:
+
+- **P0**: a default composition dominates the page, such as an unchosen purple/blue gradient, gradient headline, untouched starter theme, or centered hero plus identical feature cards.
+- **P1**: repeated rounded cards and shadows, glass effects without layering, generic proof/stat strips, default page shells, stock icon chips, vague aspirational copy, or missing focus/error/loading states.
+- **P2**: flat spacing rhythm, repeated reveal motion, ornamental badges, or small polish gaps.
+
+These are signals, not a blacklist. A gradient, three-column layout, system font, or icon library can be correct when the product, brand, content, or accessibility requirement supports it. Record the visible reason before changing it.
+
+## Choose a direction before rewriting
+
+For a standalone page, commit to one coherent direction before editing. State three to five concrete moves covering type, palette, layout, motion, and one signature detail. Let the content and target workflow choose the direction; do not swap one stock theme for another. For a component inside a design system, use a surgical pass and preserve the system tokens. Rebuild only when the surface is genuinely standalone and the user has authorized that depth.
+
+## Rewrite and re-audit
+
+Preserve routes, props, state, data fetching, accessibility, copy meaning, and public contracts. Do not add dependencies or change behavior merely to remove a visual tell. After editing, check the same categories again and judge the result on three tests: each change is justified by the task, the visual system is coherent, and the page is not a repeat of a recent default direction. A clean pattern scan is necessary but not sufficient.
+
 ## Design
 
 - Choose structure from the reader's task and content, not from a rotating theme catalog.
@@ -35,6 +59,7 @@ Check for:
 - inconsistent tokens, icons, controls, or interaction states
 - mobile and desktop overflow, occlusion, wrapping, or unstable dimensions
 - accessibility, focus, reduced-motion, empty, loading, error, and success behavior where applicable
+- code-certain versus rendered evidence, so inferred visual claims are not presented as facts
 
 Do not label a page AI-generated. Report the observable design pattern and its consequence.
 
