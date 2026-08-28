@@ -27,6 +27,8 @@ python tools/sync_profile.py --action dry-run --profile engineer
 - Preserve personal skills: installers manage only `ispark-*` folders.
 - Anti-slop is layered: use `ispark-anti-slop` to route, then let writing, academic,
   product-design, browser-QA, dev-workflow, and review-risk skills own their boundaries.
+- Chinese pattern inventories load only for explicit anti-slop work; ordinary Chinese
+  writing keeps the shorter fact, register, and sentence-relation guidance.
 - Broad codebase scouting and React/Next performance have narrow entry skills; planning,
   TDD, debugging, review, verification, and subagent methods stay with existing owners.
 - Keep reusable skill templates project-neutral: use placeholders for namespaces, hosts,

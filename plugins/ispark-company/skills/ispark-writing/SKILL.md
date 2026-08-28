@@ -13,6 +13,7 @@ Use this for prose quality. Keep artifact authority, operational actions, and do
 - Apply the generation/rewrite/audit loop and register check: read `references/quality-loop.md`.
 - Audit for observable AI-slop patterns without editing: read `references/anti-slop.md`.
 - Write or edit Simplified Chinese: also read `references/chinese-writing.md`.
+- For an explicit Chinese AI-like/template-phrase audit or rewrite: also read `references/chinese-ai-patterns.md`; do not load its inventory for ordinary Chinese edits.
 - Calibrate to an authorized author sample or project profile: read `references/voice-profile.md`.
 - Match a PRD, technical note, decision memo, release note, collaboration message, hiring artifact, product copy, or public announcement: also read `references/artifact-modes.md`.
 - Maintain or redistribute the Hallmark-derived material: read `references/upstream-hallmark.md`.

@@ -12,6 +12,12 @@ Before editing, record the fields that can change the result:
 
 Treat the ledger as a preservation contract. A style edit may subtract filler or expose a claim already present, but it may not turn an `Unknown` into a fact or a cautious result into a universal conclusion.
 
+For research or experiment-heavy writing, extend the ledger with source provenance,
+dataset/version, protocol, baseline, comparison set, exclusions, randomization or seed,
+and the analysis decision that produced each reported result. Keep observations,
+interpretations, and hypotheses in separate rows. A generated summary is a navigation
+aid; the original paper, data, code, or recorded protocol remains the evidence source.
+
 ## Intensity
 
 - **Light**: fix obvious formulaic wording, grammar, and local flow. Keep sentence boundaries and paragraph order.

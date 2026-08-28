@@ -18,6 +18,12 @@ Company skill rules:
 
 Use forward testing for complex or high-risk skills before making them stable.
 
+For behavior-enforcing skills, use a process RED/GREEN/REFACTOR gate: run pressure
+scenarios without the skill, capture the exact failure or rationalization, add the
+smallest counter-rule, re-run with the skill, then close newly discovered loopholes.
+Three or more combined pressures are required when the skill can be rationalized away.
+Passing frontmatter or snapshot validation proves packaging, not behavioral compliance.
+
 When absorbing an external skill collection, decide in this order:
 
 1. Merge the method into an existing owner when the trigger and outcome already belong there.

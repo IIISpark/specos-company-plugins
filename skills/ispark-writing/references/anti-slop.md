@@ -54,6 +54,8 @@ Every paragraph has the same length, every list has three items, or multiple sen
 
 Fix direction: let information density and relationship determine form. Keep genuine parallel structures parallel.
 
+For explicit Chinese anti-slop work, inspect the contextual clusters in `chinese-ai-patterns.md`. A phrase hit alone is not a finding; report it only when repetition, empty escalation, a false relationship, or genre mismatch weakens the passage.
+
 ### Transition scaffolding
 
 "首先", "其次", "此外", "与此同时", "值得注意的是", or "综上所述" carries the structure because the underlying relationship is not stated.

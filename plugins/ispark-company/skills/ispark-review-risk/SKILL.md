@@ -12,6 +12,7 @@ Use this skill to slow down decisions that can create long-term or operational d
 - Code review: read `references/code-review.md`.
 - Unfamiliar-code security, threat-model, or architecture audit: first read `references/audit-context.md`.
 - Generated-code or over-defensive branch review: also read `references/code-review.md` and inspect the branch evidence.
+- Diff, variant, or sharp-edge review: read `references/code-review.md` and map the changed boundary, neighboring implementations, and failure-preserving behavior before findings.
 - Plan or product critique: read `references/plan-review.md`.
 - Security/privacy/contracts: read `references/security-contracts.md`.
 - Destructive or high-side-effect actions: read `references/destructive-actions.md`.

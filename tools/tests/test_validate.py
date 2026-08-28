@@ -149,6 +149,66 @@ class QualityRoutingTests(unittest.TestCase):
                 content = (REPO_ROOT / "skills" / skill_name / "SKILL.md").read_text(encoding="utf-8")
                 self.assertIn(boundary, content)
 
+    def test_chinese_writing_checks_high_frequency_scaffolds_with_exceptions(self) -> None:
+        content = (REPO_ROOT / "skills" / "ispark-writing" / "references" / "chinese-writing.md").read_text(encoding="utf-8")
+        for phrase in ("不是……而是……", "不仅……还……", "通过……从而……", "一方面……另一方面……"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+        self.assertIn("不是禁句", content)
+        self.assertIn("删除整组对照骨架", content)
+
+    def test_chinese_ai_patterns_are_routed_on_demand_and_not_banned(self) -> None:
+        skill = (REPO_ROOT / "skills" / "ispark-writing" / "SKILL.md").read_text(encoding="utf-8")
+        patterns = (REPO_ROOT / "skills" / "ispark-writing" / "references" / "chinese-ai-patterns.md").read_text(encoding="utf-8")
+        self.assertIn("references/chinese-ai-patterns.md", skill)
+        self.assertIn("do not load its inventory for ordinary Chinese edits", skill)
+        for phrase in ("局部密度", "不是违禁词表", "这次不是生产发布，而是本地试验", "不强制禁用"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, patterns)
+        for cluster in ("假深刻", "三件套", "商务黑话", "伪口语", "金句收尾"):
+            with self.subTest(cluster=cluster):
+                self.assertIn(cluster, patterns)
+
+    def test_skill_authoring_requires_pressure_test_loop(self) -> None:
+        content = (REPO_ROOT / "skills" / "ispark-agent-tools" / "references" / "skill-authoring.md").read_text(encoding="utf-8")
+        for phrase in ("RED/GREEN/REFACTOR", "pressure", "rationalization", "frontmatter or snapshot validation"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+
+    def test_architecture_routes_domain_model_changes_to_glossary_and_adr(self) -> None:
+        content = (REPO_ROOT / "skills" / "ispark-dev-workflow" / "references" / "architecture.md").read_text(encoding="utf-8")
+        for phrase in ("domain glossary", "concrete scenario", "hard to reverse", "working plan"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+
+    def test_review_and_react_owners_keep_expanded_source_boundaries(self) -> None:
+        review = (REPO_ROOT / "skills" / "ispark-review-risk" / "references" / "code-review.md").read_text(encoding="utf-8")
+        react = (REPO_ROOT / "skills" / "ispark-react-performance" / "references" / "react-performance.md").read_text(encoding="utf-8")
+        agent_files = (REPO_ROOT / "skills" / "ispark-agent-tools" / "references" / "agent-instruction-files.md").read_text(encoding="utf-8")
+        for phrase in ("IDOR", "race/TOCTOU", "neighboring implementations", "secret leakage"):
+            with self.subTest(owner="review", phrase=phrase):
+                self.assertIn(phrase, review)
+        for phrase in ("barrel imports", "dynamic imports", "passive global listeners", "content-visibility"):
+            with self.subTest(owner="react", phrase=phrase):
+                self.assertIn(phrase, react)
+        for phrase in ("one authoritative file", "repo-relative", "exact commands"):
+            with self.subTest(owner="agent-files", phrase=phrase):
+                self.assertIn(phrase, agent_files)
+
+    def test_academic_owner_keeps_research_protocol_ledger(self) -> None:
+        content = (REPO_ROOT / "skills" / "ispark-academic-writing" / "references" / "academic-method.md").read_text(encoding="utf-8")
+        for phrase in ("source provenance", "dataset/version", "baseline", "original paper, data, code"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+
+    def test_skill_behavior_testing_reference_is_routable(self) -> None:
+        skill = (REPO_ROOT / "skills" / "ispark-agent-tools" / "SKILL.md").read_text(encoding="utf-8")
+        reference = (REPO_ROOT / "skills" / "ispark-agent-tools" / "references" / "skill-testing.md").read_text(encoding="utf-8")
+        self.assertIn("references/skill-testing.md", skill)
+        for phrase in ("RED", "GREEN", "REFACTOR", "three combined pressures", "Metadata, snapshots"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, reference)
+
 
 class CandidateSkillIntegrationTests(unittest.TestCase):
     def test_specialized_skills_are_implicitly_discoverable_and_runtime_free(self) -> None:

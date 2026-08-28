@@ -10,6 +10,8 @@ Use this for agent infrastructure and company skill maintenance.
 ## Route
 
 - Skill authoring and validation: read `references/skill-authoring.md`.
+- Skill behavior pressure tests: read `references/skill-testing.md`.
+- AGENTS.md or CLAUDE.md instruction maintenance: read `references/agent-instruction-files.md`.
 - Distribution and profiles: read `references/distribution.md`.
 - Subagents and context: read `references/subagents.md`.
 - Optional agent tooling: read `references/optional-tooling.md`.

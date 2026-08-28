@@ -41,3 +41,17 @@
 一个 reference。现有 owner 的新增方法也都位于 references，因此普通任务不会无条件加载
 TDD、audit-context、subagent 或 React 细节。两个新 skill 均允许 implicit invocation，
 fallback profiles 则继续按岗位收窄。
+
+## 细节吸收校正
+
+后续维护不得把“选择性吸收”误读成只保留标题。已纳入的细节包括：
+
+- skill 规则本身的 RED/GREEN/REFACTOR 压力测试和 rationalization 记录；
+- 中文高频对照、递进、因果和总结骨架的上下文审查；
+- 领域模型变更时的 glossary、具体场景和 ADR 触发条件；
+- diff review 的相邻实现、variant/edge 追踪和失败可见性；
+- React 性能与 Web guideline 可用性/状态审查的职责分离。
+- AGENTS.md/CLAUDE.md 的单一事实源、精简注入和 exact command/path 校验。
+- 学术研究的证据账本、实验协议、baseline、版本和来源追踪；不引入自治循环或定时任务。
+
+仍然不导入外部仓库的自治运行时、issue tracker、dashboard、token、词表和检测器。

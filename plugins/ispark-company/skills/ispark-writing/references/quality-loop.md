@@ -16,12 +16,16 @@ For `rewrite`, preserve direct quotes, names, numbers, dates, URLs, citations, c
 
 ## Audit and triage
 
-Inspect paragraph by paragraph, skipping code blocks, quotations, headings, and genuine enumerations. Surface candidates such as empty openings, filler transitions, abstract noun chains, generic praise, negative parallelism, over-balanced lists, chatbot residue, and repeated conclusions. Then apply the removal test:
+Inspect paragraph by paragraph, skipping code blocks, quotations, headings, and genuine enumerations. Surface candidates such as empty openings, filler transitions, abstract noun chains, generic praise, negative parallelism (including repeated or abstract “不是……而是……” contrasts), over-balanced lists, chatbot residue, and repeated conclusions. Then apply the removal test:
 
 - `rewordable`: a real claim exists but filler or hedging hides it; rewrite the smallest span.
 - `hollow`: deleting the span loses no supported information; flag it and request the missing substance if it matters.
 
 An isolated em dash, adverb, list, or formal phrase is not a defect by itself. Fix clusters and context mismatches, not words on sight.
+
+When an entire contrast scaffold carries no information beyond generic emphasis, remove
+the scaffold rather than merely softening its adjectives. A concrete contrast with
+different evidence, actors, scope, or consequences may remain.
 
 ## Self-check
 

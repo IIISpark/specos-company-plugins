@@ -23,6 +23,13 @@ Challenge vague terms with concrete scenarios and cross-check them against both 
 authoritative docs and code. Record an ADR sparingly; routine implementation choices do
 not need permanent decision records.
 
+When the task changes a business concept, relationship, lifecycle, or overloaded term,
+switch into domain-modeling mode: update the repository's domain glossary (often
+`CONTEXT.md`) and record the concrete scenario that resolved the ambiguity. Keep that
+glossary free of implementation details, temporary notes, and delivery specs. Write an
+ADR only when the decision is hard to reverse, surprising without context, and based on
+a documented tradeoff. If any condition is absent, keep the decision in the working plan.
+
 A module interface includes more than a type signature: callers may also depend on
 invariants, ordering, error behavior, configuration, and performance characteristics.
 Prefer a small, stable interface that hides meaningful complexity. Do not manufacture a

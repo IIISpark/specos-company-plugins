@@ -2,6 +2,10 @@
 
 Use test scope proportional to risk.
 
+## Testing process rules
+
+For a skill or agent instruction that constrains behavior, test the process itself, not only its prose. Run a RED baseline without the instruction and record the agent's concrete failure or rationalization. Add the smallest rule that addresses it, run a GREEN pressure scenario with the instruction, then REFACTOR by closing new loopholes and re-running the scenario. Use at least three combined pressures when the rule trades speed for discipline, such as deadline, sunk cost, and incomplete evidence. Static metadata checks prove packaging, not behavioral compliance.
+
 - Behavior change: default to a red-green-refactor loop. Add the smallest test that
   expresses one observable behavior, run it, and confirm that it fails for the intended
   reason before changing production code. Make the smallest implementation pass, then
