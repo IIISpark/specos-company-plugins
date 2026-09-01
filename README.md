@@ -4,7 +4,7 @@ This repository is the shared source of truth for ISpark SpecOS Codex capabiliti
 It currently publishes the `ispark-company` Codex plugin, which contains company-level
 skills for Agent Harness, engineering workflow, large-codebase understanding, React/Next
 performance, product design, release operations, writing and editorial quality, academic
-writing, cross-domain anti-slop review, Lark collaboration, evidence-based hiring,
+writing, cross-domain anti-slop review, Tencent Meeting CLI, Lark collaboration, evidence-based hiring,
 review, debugging, browser QA, and Temporal worker work.
 
 `DramaWork` or `短剧大师` may appear in downstream workspaces, but they are not this
@@ -179,6 +179,21 @@ theme catalog, `.hallmark/` state, source stamps, or tool assumptions.
 
 For direct-install research work, use the `research` fallback profile so academic
 preservation rules are available without adding scholarly defaults to unrelated roles.
+
+`ispark-tmeet` owns Tencent Meeting CLI routing, authentication boundaries, meeting and
+recording operations, participant reports, live controls, and scoped troubleshooting.
+It is distinct from `ispark-lark`; its command details load only after Tencent Meeting
+intent is selected.
+
+`ispark-notion` owns Notion `ntn` CLI routing for authentication checks, scoped page and
+data-source reads, page mutations, file operations, diagnostics, and authorized API
+escape hatches. It is distinct from `ispark-lark`; the entry loads command-specific
+guidance only after Notion intent is selected.
+
+`ispark-apifox` owns Apifox CLI/MCP routing for contracts, schemas, examples, mocks,
+imports/exports, tests, automation, reports, and branch workflows. It consolidates the
+official Apifox CLI skill collection behind one short entry and loads only the selected
+domain reference.
 
 ## Anti-AI-Slop And Academic Quality
 

@@ -1,6 +1,6 @@
 {
   "name": "ispark-company",
-  "version": "0.3.6+codex.20260828",
+  "version": "0.3.7+codex.20260901",
   "description": "Company plugin for ISpark SpecOS Agent Harness workflows, shared engineering methods, codebase understanding, React performance, writing quality, product craft, and operating practices.",
   "author": {
     "name": "ISpark SpecOS",

@@ -34,6 +34,7 @@
 - `ispark-agent-tools`：skill 合并决策，以及并行 Agent ownership 与复核规则。
 - `ispark-codebase-understanding`：大型陌生代码库的 read-first 映射。
 - `ispark-react-performance`：React/Next 实现性能和组件 API；视觉设计与渲染验收仍由独立 owner 负责。
+- `ispark-tmeet`：腾讯会议 CLI 的认证、会议、录制、报告、通讯录受限解析、会中控制和排障反馈；不与 `ispark-lark` 合并。
 
 ## 加载边界
 
@@ -55,3 +56,38 @@ fallback profiles 则继续按岗位收窄。
 - 学术研究的证据账本、实验协议、baseline、版本和来源追踪；不引入自治循环或定时任务。
 
 仍然不导入外部仓库的自治运行时、issue tracker、dashboard、token、词表和检测器。
+
+## 腾讯会议 Skill 吸收
+
+`tmeet-skill` 的功能面与安全约束在 2026-08-30 重新整理为独立的 `ispark-tmeet`：入口只保留
+触发条件、模块路由和跨模块门槛，命令细节拆到 `references/`。保留会议查询的 list/search 分流、
+服务端游标分页、录制权限 `prepare -> 用户确认 -> commit`、通讯录只服务邀请/呼叫、踢人目标
+必须来自参会人报告、异步导出轮询、脱敏反馈和所有高风险写操作二次确认。
+
+没有吸收自动安装 `@tencentcloud/tmeet@latest`、自动写入 agent/model 环境变量、后台 OAuth、
+原始 token/内部 ID 回显或将通讯录作为通用人员查询接口的做法。具体 CLI 参数以本机 `tmeet --help`
+和对应子命令 help 为准，避免固定版本说明漂移。
+
+## Notion CLI Skill 吸收
+
+本机 `ntn 0.22.8` 安装中发现 OpenClaw 的 `notion` skill（OpenClaw 为 MIT）；它覆盖 Notion
+页面、数据库、块和 API，但采用直接 token、原始 curl 与固定 API 版本的写法。2026-08-31 将其
+任务边界重写为独立的 `ispark-notion`，不复制上游正文，不引入 token、环境变量、硬编码版本或
+原始 API 响应的处理规则。
+
+入口按认证、页面、数据源、文件、原始 API 和 workspace 级命令拆分，只有选中的分支读取对应参考。
+保留窄范围读取、游标继续须经用户请求、歧义对象不得代选，以及创建、编辑、归档、上传、logout 和
+任意 API 写入都需紧邻执行时二次确认的约束。`ntn auth token` 被明确禁止；`ntn login`、`ntn update`
+和 Notion-as-code/worker 写入不因缺失前置条件而自动执行。
+
+## Apifox 官方 Skill 吸收
+
+官方仓库 `apifox/apifox-cli-skills` 在提交 `8a98f5f17b80689d3b11ce18e8cfda80e1e86f57` 提供 8 个
+skill：CLI 总入口、checkup、branch、import/export、test-case、test-scenario、test-automation 和
+API lifecycle。仓库当前未包含 LICENSE 文件，且 `apifox-cli` npm 包标记为 `UNLICENSED`，因此没有复制
+上游正文或把它作为可再分发依赖；仅根据官方公开内容独立重写方法。
+
+它们已合并为单一 `ispark-apifox`：官方的 `--help`/schema/agentHints 事实优先、项目/分支一致性、
+AI 分支 pick-to、导入前 OpenAPI 质量指标、空壳 case/scenario 防护、本地/云端报告区分、测试清理、
+分支合并门禁，以及现有 APIFox skill 的契约、Mock、共享模型和导出回读规则都保留在按需 references。
+安装、更新、登录、token、导入、写入、运行、报告上传、分支和合并均不会因 skill 被选中而自动执行。

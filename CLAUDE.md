@@ -29,6 +29,12 @@ python tools/sync_profile.py --action dry-run --profile engineer
   product-design, browser-QA, dev-workflow, and review-risk skills own their boundaries.
 - Chinese pattern inventories load only for explicit anti-slop work; ordinary Chinese
   writing keeps the shorter fact, register, and sentence-relation guidance.
+- Tencent Meeting operations use the separately routed `ispark-tmeet` skill; Feishu/Lark
+  meeting work remains with `ispark-lark`.
+- Notion CLI work uses the separately routed `ispark-notion` skill; it does not share
+  Feishu/Lark authentication, page, or data-source semantics.
+- Apifox CLI/MCP work uses the separately routed `ispark-apifox` skill; its contract,
+  test, import/export, automation, and branch details load only for the selected operation.
 - Broad codebase scouting and React/Next performance have narrow entry skills; planning,
   TDD, debugging, review, verification, and subagent methods stay with existing owners.
 - Keep reusable skill templates project-neutral: use placeholders for namespaces, hosts,

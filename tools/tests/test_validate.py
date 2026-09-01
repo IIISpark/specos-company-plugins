@@ -248,6 +248,83 @@ class CandidateSkillIntegrationTests(unittest.TestCase):
                 self.assertLessEqual(len(description), 280)
                 self.assertLessEqual(len(content.splitlines()), 35)
 
+    def test_tmeet_skill_is_short_and_routes_details_on_demand(self) -> None:
+        skill_root = REPO_ROOT / "skills" / "ispark-tmeet"
+        content = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        description = next(line.removeprefix("description: ") for line in content.splitlines() if line.startswith("description: "))
+        self.assertLessEqual(len(description), 280)
+        self.assertLessEqual(len(content.splitlines()), 70)
+        for reference in ("auth", "meetings", "recordings", "reports", "contacts", "live-control", "troubleshooting"):
+            with self.subTest(reference=reference):
+                self.assertTrue((skill_root / "references" / f"{reference}-routing.md").is_file())
+                self.assertIn(f"references/{reference}-routing.md", content)
+        self.assertIn("allow_implicit_invocation: true", (skill_root / "agents" / "openai.yaml").read_text(encoding="utf-8"))
+
+    def test_tmeet_skill_keeps_privacy_and_confirmation_boundaries(self) -> None:
+        skill_root = REPO_ROOT / "skills" / "ispark-tmeet"
+        content = "\n".join(path.read_text(encoding="utf-8") for path in skill_root.rglob("*.md"))
+        for phrase in ("不是通用人员检索接口", "下一条明确确认", "meeting code", "next_page_token", "permission-apply-prepare"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+        self.assertNotIn("npm install -g", content)
+        self.assertNotIn("TMEET_AGENT", content)
+
+    def test_tmeet_is_scoped_to_fallback_profiles(self) -> None:
+        profiles = list((REPO_ROOT / "profiles").glob("*.yml"))
+        self.assertEqual({path.stem for path in profiles if "- ispark-tmeet" in path.read_text(encoding="utf-8")}, {path.stem for path in profiles})
+
+    def test_notion_skill_is_short_and_routes_details_on_demand(self) -> None:
+        skill_root = REPO_ROOT / "skills" / "ispark-notion"
+        content = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        description = next(line.removeprefix("description: ") for line in content.splitlines() if line.startswith("description: "))
+        self.assertLessEqual(len(description), 280)
+        self.assertLessEqual(len(content.splitlines()), 70)
+        for reference in ("auth", "pages", "datasources", "files", "api", "workspace"):
+            with self.subTest(reference=reference):
+                self.assertTrue((skill_root / "references" / f"{reference}-routing.md").is_file())
+                self.assertIn(f"references/{reference}-routing.md", content)
+        self.assertIn("allow_implicit_invocation: true", (skill_root / "agents" / "openai.yaml").read_text(encoding="utf-8"))
+
+    def test_notion_skill_keeps_authentication_and_mutation_boundaries(self) -> None:
+        skill_root = REPO_ROOT / "skills" / "ispark-notion"
+        content = "\n".join(path.read_text(encoding="utf-8") for path in skill_root.rglob("*.md"))
+        for phrase in ("ntn auth token", "explicit confirmation", "Paginate only", "raw internal identifiers"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+        for marker in ("NOTION_API_TOKEN", "curl -", "npm install -g"):
+            with self.subTest(marker=marker):
+                self.assertNotIn(marker, content)
+
+    def test_notion_is_scoped_to_fallback_profiles(self) -> None:
+        profiles = list((REPO_ROOT / "profiles").glob("*.yml"))
+        self.assertEqual({path.stem for path in profiles if "- ispark-notion" in path.read_text(encoding="utf-8")}, {path.stem for path in profiles})
+
+    def test_apifox_skill_is_short_and_routes_official_domains_on_demand(self) -> None:
+        skill_root = REPO_ROOT / "skills" / "ispark-apifox"
+        content = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        description = next(line.removeprefix("description: ") for line in content.splitlines() if line.startswith("description: "))
+        self.assertLessEqual(len(description), 280)
+        self.assertLessEqual(len(content.splitlines()), 70)
+        for reference in ("cli", "contracts", "import-export", "test-case", "test-scenario", "automation", "branches", "troubleshooting", "lifecycle"):
+            with self.subTest(reference=reference):
+                self.assertTrue((skill_root / "references" / f"{reference}-routing.md").is_file())
+                self.assertIn(f"references/{reference}-routing.md", content)
+        self.assertIn("allow_implicit_invocation: true", (skill_root / "agents" / "openai.yaml").read_text(encoding="utf-8"))
+
+    def test_apifox_skill_keeps_official_quality_and_safety_boundaries(self) -> None:
+        skill_root = REPO_ROOT / "skills" / "ispark-apifox"
+        content = "\n".join(path.read_text(encoding="utf-8") for path in skill_root.rglob("*.md"))
+        for phrase in ("cli-schema validate", "agentHints", "empty object bodies", "ignored count", "pick-to", "Uploading a report"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+        for marker in ("npm i -g", "npm install", "APIFOX_TOKEN", "--access-token <token>", "C:\\Users\\"):
+            with self.subTest(marker=marker):
+                self.assertNotIn(marker, content)
+
+    def test_apifox_is_scoped_to_fallback_profiles(self) -> None:
+        profiles = list((REPO_ROOT / "profiles").glob("*.yml"))
+        self.assertEqual({path.stem for path in profiles if "- ispark-apifox" in path.read_text(encoding="utf-8")}, {path.stem for path in profiles})
+
     def test_fallback_profiles_scope_specialized_skills(self) -> None:
         expected_profiles = {
             "ispark-codebase-understanding": {

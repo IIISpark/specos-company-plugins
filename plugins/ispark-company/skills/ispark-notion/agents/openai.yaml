@@ -1,0 +1,10 @@
+interface:
+  display_name: "ISpark Notion"
+  short_description: "通过 ntn CLI 安全处理 Notion 页面、数据源与文件"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#246c85"
+  default_prompt: "使用 $ispark-notion 安全地处理这个 Notion 任务。"
+
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,10 @@
+interface:
+  display_name: "ISpark Tencent Meeting"
+  short_description: "通过 tmeet CLI 管理腾讯会议、录制与会中操作"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#168d99"
+  default_prompt: "使用 $ispark-tmeet 安全地处理这个腾讯会议任务。"
+
+policy:
+  allow_implicit_invocation: true

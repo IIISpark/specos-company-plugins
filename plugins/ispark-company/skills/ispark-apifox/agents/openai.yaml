@@ -1,0 +1,10 @@
+interface:
+  display_name: "ISpark Apifox"
+  short_description: "安全管理 Apifox 契约、测试、导入导出与分支"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#f05454"
+  default_prompt: "使用 $ispark-apifox 安全地处理这个 Apifox 任务。"
+
+policy:
+  allow_implicit_invocation: true
