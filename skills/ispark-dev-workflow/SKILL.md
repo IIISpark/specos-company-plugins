@@ -1,6 +1,6 @@
 ---
 name: ispark-dev-workflow
-description: Use for engineering specs and implementation, including multi-step plans, TDD/test scope, worktree choice, safe module changes, minimal refactors, and completion verification. For docs-only use ispark-docs-issues, review-only use ispark-review-risk, and broad unfamiliar-codebase reconnaissance use ispark-codebase-understanding.
+description: "Use for engineering specs and implementation: plans, TDD/tests, worktrees, safe module changes, minimal refactors, and verification. Docs-only: ispark-docs-issues; review-only: ispark-review-risk; unfamiliar-codebase mapping: ispark-codebase-understanding."
 ---
 
 # ISpark Dev Workflow
@@ -13,6 +13,7 @@ Use this for normal engineering work. Keep the task scoped, read local project f
 - Implementation, regression tests, or TDD: read `references/testing.md`.
 - Worktree or branch isolation: read `references/worktrees.md`.
 - Domain terminology, module interface, architecture, or refactor decisions: read `references/architecture.md`.
+- TypeScript visualization data or renderer contracts: read `references/typescript-visualization.md`.
 - Minimal implementation and over-defensive-code review: read `references/code-minimalism.md`.
 - Completion evidence or handoff: read `references/verification.md`.
 

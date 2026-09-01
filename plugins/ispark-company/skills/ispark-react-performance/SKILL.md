@@ -1,6 +1,6 @@
 ---
 name: ispark-react-performance
-description: Use for React or Next.js performance and scalable component API work, including data waterfalls, bundles, server/client boundaries, rerenders, rendering cost, or boolean-prop proliferation. Do not use for visual design, non-React frontend work, or browser acceptance alone.
+description: "Use for React or Next.js performance, visualization integration, and scalable component APIs: waterfalls, bundles, server/client boundaries, hydration, rerenders, or boolean-prop proliferation. Do not use for visual design, non-React work, or browser acceptance alone."
 ---
 
 # ISpark React Performance
@@ -13,6 +13,8 @@ repository's supported versions.
 
 - React/Next.js performance or component-composition work: read
   `references/react-performance.md`.
+- React/Next.js visualization integration, renderer lifecycle, hydration, or chart bundle cost:
+  read `references/visualization-integration.md`.
 
 ## Defaults
 

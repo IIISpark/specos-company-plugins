@@ -1,6 +1,6 @@
 ---
 name: ispark-writing
-description: Use for drafting, rewriting, adapting, or auditing reader-facing prose such as company docs, PRDs, reports, release notes, messages, and product copy, including requests to humanize or reduce robotic wording. For scholarly manuscripts use ispark-academic-writing; for visual or interaction changes use ispark-product-design. Exclude code-only and mechanical transforms.
+description: "Use for reader-facing prose: docs, PRDs, reports, release notes, messages, and product copy. Draft, rewrite, adapt, audit, humanize while preserving facts and genre. Scholarly manuscripts: ispark-academic-writing; visual/interaction: ispark-product-design; exclude code-only."
 ---
 
 # ISpark Writing

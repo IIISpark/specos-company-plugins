@@ -22,11 +22,13 @@ python tools/sync_profile.py --action dry-run --profile engineer
 
 - Edit `skills/` and rebuild the plugin snapshot; never maintain installed caches.
 - Keep each `SKILL.md` short and route detailed guidance to `references/`.
+- Keep every discovery `description` at or below 280 characters; move detail to on-demand references.
 - Use descriptions as the discovery index and explicitly allow implicit invocation;
   load full instructions and references only after routing.
 - Preserve personal skills: installers manage only `ispark-*` folders.
 - Anti-slop is layered: use `ispark-anti-slop` to route, then let writing, academic,
-  product-design, browser-QA, dev-workflow, and review-risk skills own their boundaries.
+  architecture-diagrams, data-visualization, product-design, browser-QA, dev-workflow,
+  and review-risk skills own their boundaries.
 - Chinese pattern inventories load only for explicit anti-slop work; ordinary Chinese
   writing keeps the shorter fact, register, and sentence-relation guidance.
 - Tencent Meeting operations use the separately routed `ispark-tmeet` skill; Feishu/Lark
@@ -35,10 +37,18 @@ python tools/sync_profile.py --action dry-run --profile engineer
   Feishu/Lark authentication, page, or data-source semantics.
 - Apifox CLI/MCP work uses the separately routed `ispark-apifox` skill; its contract,
   test, import/export, automation, and branch details load only for the selected operation.
-- Broad codebase scouting and React/Next performance have narrow entry skills; planning,
-  TDD, debugging, review, verification, and subagent methods stay with existing owners.
+- Broad codebase scouting and React/Next performance have narrow entry skills; React
+  visualization integration and TypeScript visualization contracts load through on-demand
+  references under React performance and dev workflow rather than new overlapping owners.
+- Evidence-bearing charts, maps, dashboards, statistical graphics, and data-bearing diagrams
+  use `ispark-data-visualization`; product/UI direction, browser acceptance, and React
+  performance remain with their existing owners. UML, C4, ERD, BPMN, sequence/state, and
+  software architecture views use `ispark-architecture-diagrams`. Details load on demand.
 - Keep reusable skill templates project-neutral: use placeholders for namespaces, hosts,
   paths, headers, and deployment labels; target-repository facts supply real values.
+- Validate every distributable skill text file for personal homes/emails, concrete internal
+  hosts, and downstream project/runtime markers. Manifest author fields are public package
+  metadata outside the skill-payload privacy scan.
 
 See `README.md`, `docs/anti-ai-slop-integration.md`, and
 `docs/candidate-skill-integration.md` for install, validation, and method boundaries.

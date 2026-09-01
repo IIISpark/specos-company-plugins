@@ -8,6 +8,11 @@ import re
 from pathlib import Path
 
 try:
+    import yaml
+except ModuleNotFoundError:  # pragma: no cover - the fallback keeps the helper standalone
+    yaml = None
+
+try:
     from tools.build_plugin_snapshot import IGNORE_NAMES, IGNORE_SUFFIXES
 except ModuleNotFoundError:
     from build_plugin_snapshot import IGNORE_NAMES, IGNORE_SUFFIXES
@@ -23,7 +28,6 @@ MARKETPLACE = REPO_ROOT / ".agents" / "plugins" / "marketplace.json"
 
 NAME_RE = re.compile(r"(?m)^name:\s*([a-z0-9-]+)\s*$")
 DESCRIPTION_RE = re.compile(r"(?m)^description:\s*.+$")
-PERSONAL_PATH_RE = re.compile(r"C:\\Users\\nmg_w|skills-archive")
 OUTPUT_LANGUAGE_RE = re.compile(r"Simplified Chinese|简体中文")
 TEMP_PATH_RE = re.compile(r"working-delta/|\.tmp/|tmp/")
 YAML_STRING_RE = re.compile(r'(?m)^\s*{key}:\s*"([^"]+)"\s*$')
@@ -31,6 +35,28 @@ REFERENCE_PATH_RE = re.compile(r"`(references/[^`]+)`")
 IMPLICIT_INVOCATION_RE = re.compile(
     r"(?m)^[ \t]+allow_implicit_invocation:[ \t]*true[ \t]*$"
 )
+FRONTMATTER_RE = re.compile(
+    r"\A---[ \t]*\r?\n(?P<body>.*?)(?:\r?\n)---[ \t]*(?:\r?\n|\Z)",
+    re.DOTALL,
+)
+FRONTMATTER_KEY_RE = re.compile(r"^[A-Za-z0-9_-]+:")
+UNQUOTED_MAPPING_COLON_RE = re.compile(r":(?:[ \t]|$)")
+FRONTMATTER_ALLOWED_KEYS = frozenset({"name", "description", "license", "allowed-tools", "metadata"})
+MAX_DISCOVERY_DESCRIPTION_CHARS = 280
+EMAIL_RE = re.compile(r"(?i)\b[A-Z0-9._%+-]+@([A-Z0-9.-]+\.[A-Z]{2,})\b")
+WINDOWS_USER_HOME_RE = re.compile(
+    r"(?i)\b[A-Z]:[\\/]+(?:Users|Documents and Settings)[\\/]+[^\\/\s\"'<>]+"
+)
+POSIX_USER_HOME_RE = re.compile(r"(?i)(?<![A-Z0-9])/(?:home|Users)/([^/\s\"'<>]+)")
+INTERNAL_HOST_RE = re.compile(
+    r"(?i)(?<![A-Z0-9_.-])(?:[A-Z0-9<][A-Z0-9<>-]*\.)+(?:internal|local)\b"
+)
+PROJECT_RUNTIME_MARKER_RE = re.compile(
+    r"(?i)dramawork|DRAMAWORK_|dw:v2:|X-DW-|/var/tmp/dramawork|skills-archive"
+)
+RESERVED_EMAIL_DOMAINS = frozenset({"example.com", "example.net", "example.org"})
+PORTABLE_POSIX_HOME_USERS = frozenset({"appuser"})
+PORTABLE_INTERNAL_HOSTS = frozenset({"temporal-frontend.default.svc.cluster.local"})
 
 
 def yaml_string(text: str, key: str) -> str | None:
@@ -38,6 +64,112 @@ def yaml_string(text: str, key: str) -> str | None:
     if not match:
         return None
     return match.group(1)
+
+
+def _basic_frontmatter_errors(body: str) -> list[str]:
+    """Check the scalar frontmatter shape when PyYAML is unavailable."""
+
+    errors: list[str] = []
+    keys: set[str] = set()
+    values: dict[str, str] = {}
+    block_scalar = False
+    block_mapping = False
+    for line_number, line in enumerate(body.splitlines(), start=1):
+        if not line.strip():
+            continue
+        if block_scalar or block_mapping:
+            if line.startswith((" ", "\t")):
+                continue
+            block_scalar = False
+            block_mapping = False
+        if line.startswith((" ", "\t")) or not FRONTMATTER_KEY_RE.match(line):
+            errors.append(f"line {line_number} is not a top-level YAML field")
+            continue
+        key, value = line.split(":", 1)
+        if key in keys:
+            errors.append(f"line {line_number} repeats YAML field {key}")
+        keys.add(key)
+        value = value.lstrip()
+        values[key] = value
+        if not value:
+            if key == "metadata":
+                block_mapping = True
+                values[key] = "{}"
+                continue
+            errors.append(f"line {line_number} has no YAML value for {key}")
+            continue
+        if value[0] in {"'", '"'}:
+            quote = value[0]
+            if len(value) < 2 or value[-1] != quote:
+                errors.append(f"line {line_number} has an unterminated YAML string")
+        elif value[0] in {"|", ">"}:
+            block_scalar = True
+        elif UNQUOTED_MAPPING_COLON_RE.search(value):
+            errors.append(f"line {line_number} contains an unquoted mapping colon")
+    for key in sorted(keys - FRONTMATTER_ALLOWED_KEYS):
+        errors.append(f"unexpected field {key}")
+    for required_key in ("name", "description"):
+        if required_key not in keys:
+            errors.append(f"missing field {required_key}")
+        elif values[required_key].lower() in {"null", "~", "true", "false"} or values[required_key].startswith(("[", "{")):
+            errors.append(f"field {required_key} must be a string")
+    description = values.get("description", "").strip("\"'")
+    if description:
+        if len(description) > MAX_DISCOVERY_DESCRIPTION_CHARS:
+            errors.append(
+                f"description exceeds {MAX_DISCOVERY_DESCRIPTION_CHARS} characters"
+            )
+        if "<" in description or ">" in description:
+            errors.append("description contains angle brackets")
+    return errors
+
+
+def validate_frontmatter(skill_file: Path, text: str, errors: list[str]) -> None:
+    """Validate a skill's YAML frontmatter with a parser or a conservative fallback."""
+
+    match = FRONTMATTER_RE.match(text)
+    if not match:
+        errors.append(f"Invalid YAML frontmatter: {skill_file}")
+        return
+    body = match.group("body")
+    if yaml is None:
+        for detail in _basic_frontmatter_errors(body):
+            errors.append(f"Invalid YAML frontmatter: {skill_file}: {detail}")
+        return
+    try:
+        parsed = yaml.safe_load(body)
+    except yaml.YAMLError as exc:
+        mark = getattr(exc, "problem_mark", None)
+        line = f" line {mark.line + 1}" if mark is not None else ""
+        problem = getattr(exc, "problem", str(exc))
+        errors.append(f"Invalid YAML frontmatter: {skill_file}:{line} {problem}")
+    else:
+        if not isinstance(parsed, dict):
+            errors.append(f"Invalid YAML frontmatter: {skill_file}: expected a mapping")
+            return
+        unknown_keys = sorted(set(parsed) - FRONTMATTER_ALLOWED_KEYS)
+        if unknown_keys:
+            errors.append(
+                f"Invalid YAML frontmatter: {skill_file}: unexpected field(s) {', '.join(unknown_keys)}"
+            )
+        for required_key in ("name", "description"):
+            if required_key not in parsed:
+                errors.append(f"Invalid YAML frontmatter: {skill_file}: missing {required_key}")
+            elif not isinstance(parsed[required_key], str):
+                errors.append(
+                    f"Invalid YAML frontmatter: {skill_file}: {required_key} must be a string"
+                )
+        description = parsed.get("description")
+        if isinstance(description, str):
+            if len(description) > MAX_DISCOVERY_DESCRIPTION_CHARS:
+                errors.append(
+                    f"Invalid YAML frontmatter: {skill_file}: description exceeds "
+                    f"{MAX_DISCOVERY_DESCRIPTION_CHARS} characters"
+                )
+            if "<" in description or ">" in description:
+                errors.append(
+                    f"Invalid YAML frontmatter: {skill_file}: description contains angle brackets"
+                )
 
 
 def validate_relative_asset(base: Path, raw_path: str, owner: Path, errors: list[str]) -> None:
@@ -67,6 +199,66 @@ def source_skill_files(root: Path) -> dict[str, Path]:
             if path.is_file() and not is_ignored_file(path, root):
                 files[path.relative_to(root).as_posix()] = path
     return files
+
+
+def find_skill_privacy_violations(root: Path) -> list[str]:
+    """Find personal or downstream-specific identifiers in skill payload text.
+
+    Parameters
+    ----------
+    root : Path
+        Source skill root to scan.
+
+    Returns
+    -------
+    list[str]
+        Deterministic validation errors without echoing the matched value.
+
+    Notes
+    -----
+    This scope is every UTF-8 text file in the distributable skill payload, regardless
+    of extension. Binary assets are skipped. Plugin manifest author fields are
+    intentional public package metadata and are validated separately.
+    """
+
+    errors: list[str] = []
+    for relative_path, path in sorted(source_skill_files(root).items()):
+        try:
+            payload = path.read_bytes()
+        except OSError:
+            errors.append(f"Skill payload could not be read: {relative_path}")
+            continue
+        if b"\x00" in payload:
+            # Binary assets are not text-bearing instructions or metadata.
+            continue
+        try:
+            text = payload.decode("utf-8")
+        except UnicodeDecodeError:
+            # Unknown binary files may be shipped as assets. Text files should
+            # remain UTF-8, but rejecting an opaque binary here would be noisy.
+            continue
+
+        findings: list[tuple[str, re.Match[str]]] = []
+        for match in EMAIL_RE.finditer(text):
+            if match.group(1).lower() not in RESERVED_EMAIL_DOMAINS:
+                findings.append(("personal email", match))
+        findings.extend(("Windows user home", match) for match in WINDOWS_USER_HOME_RE.finditer(text))
+        for match in POSIX_USER_HOME_RE.finditer(text):
+            if match.group(1).lower() not in PORTABLE_POSIX_HOME_USERS:
+                findings.append(("POSIX user home", match))
+        for match in INTERNAL_HOST_RE.finditer(text):
+            hostname = match.group(0).lower()
+            if "<" not in hostname and hostname not in PORTABLE_INTERNAL_HOSTS:
+                findings.append(("internal hostname", match))
+        findings.extend(
+            ("project/runtime marker", match)
+            for match in PROJECT_RUNTIME_MARKER_RE.finditer(text)
+        )
+
+        for kind, match in sorted(findings, key=lambda item: (item[1].start(), item[0])):
+            line_number = text.count("\n", 0, match.start()) + 1
+            errors.append(f"Skill payload contains {kind}: {relative_path}:{line_number}")
+    return errors
 
 
 def snapshot_skill_files(root: Path) -> dict[str, Path]:
@@ -109,8 +301,7 @@ def validate_skills(errors: list[str]) -> set[str]:
     for skill_dir in skill_dirs:
         skill_file = skill_dir / "SKILL.md"
         text = skill_file.read_text(encoding="utf-8")
-        if not text.startswith("---"):
-            errors.append(f"Missing YAML frontmatter: {skill_file}")
+        validate_frontmatter(skill_file, text, errors)
         name_match = NAME_RE.search(text)
         if not name_match:
             errors.append(f"Missing or invalid name: {skill_file}")
@@ -120,8 +311,6 @@ def validate_skills(errors: list[str]) -> set[str]:
             skill_names.add(name_match.group(1))
         if not DESCRIPTION_RE.search(text):
             errors.append(f"Missing description: {skill_file}")
-        if PERSONAL_PATH_RE.search(text):
-            errors.append(f"Runtime text references personal archive path: {skill_file}")
         if not OUTPUT_LANGUAGE_RE.search(text):
             errors.append(f"Missing Simplified Chinese output rule: {skill_file}")
         if not TEMP_PATH_RE.search(text):
@@ -147,6 +336,7 @@ def validate_skills(errors: list[str]) -> set[str]:
                     errors.append(f"Missing agents {key}: {agents_file}")
                 else:
                     validate_relative_asset(skill_dir, icon_path, agents_file, errors)
+    errors.extend(find_skill_privacy_violations(SKILLS_ROOT))
     return skill_names
 
 

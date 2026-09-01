@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 import tempfile
 import unittest
@@ -7,6 +8,7 @@ from pathlib import Path
 from subprocess import CompletedProcess
 from unittest.mock import patch
 
+import tools.validate as validate_module
 from tools.install_or_update import update_marketplace
 from tools.validate import compare_skill_snapshot
 
@@ -75,6 +77,72 @@ class CompareSkillSnapshotTests(unittest.TestCase):
         ignored_file.write_bytes(b"ignored")
 
         self.assertEqual(compare_skill_snapshot(self.source_root, self.snapshot_root), [])
+
+
+class FrontmatterValidationTests(unittest.TestCase):
+    def test_all_source_skill_frontmatter_is_parseable(self) -> None:
+        errors: list[str] = []
+        for skill_file in sorted((REPO_ROOT / "skills").glob("*/SKILL.md")):
+            validate_module.validate_frontmatter(
+                skill_file,
+                skill_file.read_text(encoding="utf-8"),
+                errors,
+            )
+
+        self.assertEqual(errors, [])
+
+    def test_unquoted_mapping_colon_is_rejected(self) -> None:
+        errors: list[str] = []
+        validate_module.validate_frontmatter(
+            Path("ispark-example/SKILL.md"),
+            "---\nname: ispark-example\ndescription: APIs: waterfalls\n---\n",
+            errors,
+        )
+
+        self.assertTrue(any("Invalid YAML frontmatter" in error for error in errors))
+
+    def test_frontmatter_required_fields_and_allowed_keys_are_checked(self) -> None:
+        errors: list[str] = []
+        validate_module.validate_frontmatter(
+            Path("ispark-example/SKILL.md"),
+            "---\nname: [ispark-example]\ndescription: valid\nextra: true\n---\n",
+            errors,
+        )
+
+        combined = "\n".join(errors)
+        self.assertIn("unexpected field(s)", combined)
+        self.assertIn("name must be a string", combined)
+
+    def test_frontmatter_fallback_accepts_metadata_mapping(self) -> None:
+        errors: list[str] = []
+        with patch.object(validate_module, "yaml", None):
+            validate_module.validate_frontmatter(
+                Path("ispark-example/SKILL.md"),
+                "---\nname: ispark-example\ndescription: valid\nmetadata:\n  owner: team\n---\n",
+                errors,
+            )
+
+        self.assertEqual(errors, [])
+
+    def test_frontmatter_discovery_description_budget_and_characters_are_checked(self) -> None:
+        overlong = "x" * (validate_module.MAX_DISCOVERY_DESCRIPTION_CHARS + 1)
+        errors: list[str] = []
+        validate_module.validate_frontmatter(
+            Path("ispark-example/SKILL.md"),
+            f"---\nname: ispark-example\ndescription: \"{overlong}\"\n---\n",
+            errors,
+        )
+        validate_module.validate_frontmatter(
+            Path("ispark-angle/SKILL.md"),
+            '---\nname: ispark-angle\ndescription: "route <owner>"\n---\n',
+            errors,
+        )
+
+        combined = "\n".join(errors)
+        self.assertIn("description exceeds", combined)
+        self.assertIn("description contains angle brackets", combined)
+
+
 class UpdateMarketplaceTests(unittest.TestCase):
     @patch("tools.install_or_update.run")
     def test_local_marketplace_skips_git_upgrade_error(self, run_mock: object) -> None:
@@ -137,12 +205,14 @@ class QualityRoutingTests(unittest.TestCase):
         self.assertIn("Do not load this skill's routing reference", normalized_anti_slop)
         self.assertIn("no more than the two owner skills", normalized_anti_slop)
         self.assertIn("Do not load `ispark-anti-slop` again after handoff", routing)
+        self.assertIn("when available", normalized_anti_slop)
+        self.assertIn("state the gap", normalized_anti_slop)
 
         boundaries = {
-            "ispark-writing": "visual or interaction changes use ispark-product-design",
+            "ispark-writing": "visual/interaction: ispark-product-design",
             "ispark-product-design": "wording-only edits use ispark-writing",
-            "ispark-dev-workflow": "review-only use ispark-review-risk",
-            "ispark-review-risk": "For implementation use ispark-dev-workflow",
+            "ispark-dev-workflow": "review-only: ispark-review-risk",
+            "ispark-review-risk": "Implementation: ispark-dev-workflow",
         }
         for skill_name, boundary in boundaries.items():
             with self.subTest(skill_name=skill_name):
@@ -196,7 +266,9 @@ class QualityRoutingTests(unittest.TestCase):
                 self.assertIn(phrase, agent_files)
 
     def test_academic_owner_keeps_research_protocol_ledger(self) -> None:
+        skill = (REPO_ROOT / "skills" / "ispark-academic-writing" / "SKILL.md").read_text(encoding="utf-8")
         content = (REPO_ROOT / "skills" / "ispark-academic-writing" / "references" / "academic-method.md").read_text(encoding="utf-8")
+        self.assertIn("humanize", skill)
         for phrase in ("source provenance", "dataset/version", "baseline", "original paper, data, code"):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, content)
@@ -247,6 +319,24 @@ class CandidateSkillIntegrationTests(unittest.TestCase):
                 )
                 self.assertLessEqual(len(description), 280)
                 self.assertLessEqual(len(content.splitlines()), 35)
+
+    def test_all_discovery_descriptions_stay_within_context_budget(self) -> None:
+        for skill_file in sorted((REPO_ROOT / "skills").glob("*/SKILL.md")):
+            content = skill_file.read_text(encoding="utf-8")
+            raw_description = next(
+                line.removeprefix("description: ")
+                for line in content.splitlines()
+                if line.startswith("description: ")
+            )
+            if validate_module.yaml is not None:
+                frontmatter = validate_module.yaml.safe_load(
+                    content.split("---", 2)[1]
+                )
+                description = frontmatter["description"]
+            else:
+                description = raw_description.strip("\"'")
+            with self.subTest(skill=skill_file.parent.name):
+                self.assertLessEqual(len(description), 280)
 
     def test_tmeet_skill_is_short_and_routes_details_on_demand(self) -> None:
         skill_root = REPO_ROOT / "skills" / "ispark-tmeet"
@@ -367,6 +457,530 @@ class CandidateSkillIntegrationTests(unittest.TestCase):
                     self.assertIn(f"`{reference}`", entrypoint)
 
 
+class VisualizationSkillTests(unittest.TestCase):
+    SKILL_NAME = "ispark-data-visualization"
+
+    def setUp(self) -> None:
+        self.skill_root = REPO_ROOT / "skills" / self.SKILL_NAME
+
+    def read_skill_text(self) -> str:
+        return "\n".join(path.read_text(encoding="utf-8") for path in self.skill_root.rglob("*.md"))
+
+    def test_visualization_entrypoint_is_short_implicit_and_reference_only(self) -> None:
+        content = (self.skill_root / "SKILL.md").read_text(encoding="utf-8")
+        description = next(line.removeprefix("description: ") for line in content.splitlines() if line.startswith("description: "))
+
+        self.assertLessEqual(len(description), 280)
+        self.assertLessEqual(len(content.splitlines()), 40)
+        self.assertLessEqual(len(content.encode("utf-8")), 4096)
+        self.assertFalse((self.skill_root / "scripts").exists())
+        self.assertIn("allow_implicit_invocation: true", (self.skill_root / "agents" / "openai.yaml").read_text(encoding="utf-8"))
+        for reference in (
+            "task-and-evidence",
+            "encoding-and-statistical-integrity",
+            "renderer-selection",
+            "high-density-rendering",
+            "interaction-responsive-and-state",
+            "composition-and-advanced-modes",
+            "verification-and-export",
+        ):
+            with self.subTest(reference=reference):
+                self.assertTrue((self.skill_root / "references" / f"{reference}.md").is_file())
+                self.assertIn(f"references/{reference}.md", content)
+
+    def test_visualization_keeps_nearby_owner_boundaries(self) -> None:
+        content = (self.skill_root / "SKILL.md").read_text(encoding="utf-8")
+        for phrase in (
+            "evidence-bearing",
+            "charts, maps, dashboards",
+            "statistical graphics",
+            "timelines/Gantt",
+            "scrollytelling",
+            "D3/SVG",
+            "Canvas/WebGL",
+            "$ispark-product-design",
+            "$ispark-browser-qa",
+            "$ispark-react-performance",
+            "bundled `visualize`",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+
+        anti_slop = (REPO_ROOT / "skills" / "ispark-anti-slop" / "SKILL.md").read_text(encoding="utf-8")
+        routing = (REPO_ROOT / "skills" / "ispark-anti-slop" / "references" / "routing.md").read_text(encoding="utf-8")
+        self.assertIn("$ispark-data-visualization", anti_slop)
+        for phrase in ("data charts, maps, statistical graphics", "evidence-bearing timelines/scrollytelling"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, routing)
+        self.assertIn("UI-only dashboard shells stay with", routing)
+
+    def test_visualization_discovery_owns_live_fidelity_not_generic_performance(self) -> None:
+        content = (self.skill_root / "SKILL.md").read_text(encoding="utf-8")
+        description = next(
+            line.removeprefix("description: ")
+            for line in content.splitlines()
+            if line.startswith("description: ")
+        )
+
+        for phrase in ("live-data fidelity", "degradation", "unrelated framework performance"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, description)
+        self.assertNotIn("Exclude UI-only shells, browser QA, performance.", description)
+
+    def test_visualization_discovery_uses_data_aliases_without_diagram_collision(self) -> None:
+        content = (self.skill_root / "SKILL.md").read_text(encoding="utf-8")
+        description = next(
+            line.removeprefix("description: ")
+            for line in content.splitlines()
+            if line.startswith("description: ")
+        )
+        for phrase in ("charts/maps/dashboards", "statistical graphics", "timelines/Gantt", "data-bearing diagrams"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, description)
+        self.assertNotIn("analytical diagrams", description)
+        self.assertIn("Software or system documentation diagrams", (self.skill_root / "references" / "renderer-selection.md").read_text(encoding="utf-8"))
+
+    def test_visualization_routes_system_diagrams_without_process_overlap(self) -> None:
+        renderer = (self.skill_root / "references" / "renderer-selection.md").read_text(encoding="utf-8")
+        evidence = (self.skill_root / "references" / "task-and-evidence.md").read_text(encoding="utf-8")
+
+        self.assertIn("Software or system documentation diagrams", renderer)
+        self.assertIn("$ispark-architecture-diagrams", renderer)
+        self.assertIn("Evidence-bearing schedule or planned spans", evidence)
+        self.assertNotIn("Schedule or process", evidence)
+
+    def test_visualization_renderer_guidance_is_stack_neutral(self) -> None:
+        content = self.read_skill_text()
+        for renderer in ("declarative", "SVG", "D3", "Canvas", "WebGL", "Three", "Matplotlib", "Seaborn", "Altair", "ggplot2"):
+            with self.subTest(renderer=renderer):
+                self.assertIn(renderer, content)
+        self.assertNotRegex(content, r"d3@\d")
+        self.assertNotRegex(content.lower(), r"https?://[^\s`)]*cdn")
+        self.assertNotRegex(content, r"默认(?:使用|选择)\s*D3")
+        self.assertIn("D3 is one renderer path, not a default", content)
+
+    def test_high_density_renderer_contract_covers_canvas_and_gpu_lifecycle(self) -> None:
+        content = " ".join(
+            (self.skill_root / "references" / "high-density-rendering.md")
+            .read_text(encoding="utf-8")
+            .split()
+        ).lower()
+        for phrase in (
+            "backing store",
+            "settransform",
+            "world-to-screen",
+            "partial invalidation",
+            "pointercancel",
+            "lostpointercapture",
+            "path2d",
+            "willreadfrequently",
+            "offscreen",
+            "buffergeometry",
+            "instancing",
+            "context loss",
+            "dispose",
+            "non-webgl fallback",
+            "nonblank pixels",
+            "one scene clock",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+
+    def test_visualization_advanced_modes_keep_source_and_fallback_contracts(self) -> None:
+        content = " ".join(
+            (self.skill_root / "references" / "composition-and-advanced-modes.md")
+            .read_text(encoding="utf-8")
+            .split()
+        )
+        for phrase in (
+            "testable insight",
+            "native scrolling",
+            "Support fast",
+            "scene enter/exit thresholds",
+            "progress-to-state mapping",
+            "media loading",
+            "antimeridian",
+            "coordinate reference system",
+            "basemap/provider attribution",
+            "rate limits",
+            "failed-tile",
+            "fixed seed",
+            "stable node/edge IDs",
+            "crossing reduction",
+            "overlap removal",
+            "planned spans",
+            "critical path",
+            "import/export format",
+            "static continuation",
+            "schematic map",
+            "executable contract",
+            "entry condition",
+            "exit condition",
+            "preserved invariants",
+            "deterministic fixture",
+            "$ispark-product-design",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+
+    def test_visualization_preserves_semantics_and_fallbacks(self) -> None:
+        content = self.read_skill_text().lower()
+        for phrase in (
+            "analytical question",
+            "scale/domain",
+            "aggregation",
+            "uncertainty",
+            "missing data",
+            "mobile",
+            "keyboard",
+            "touch",
+            "reduced-motion",
+            "static fallback",
+            "export",
+            "shareable state",
+            "loading",
+            "stale",
+            "empty",
+            "error",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+
+    def test_visualization_accessibility_has_measurable_and_nonvisual_acceptance(self) -> None:
+        content = (
+            self.skill_root / "references" / "verification-and-export.md"
+        ).read_text(encoding="utf-8").lower()
+        for phrase in (
+            "4.5:1",
+            "3:1",
+            "color-role ledger",
+            "grayscale",
+            "color-vision",
+            "keyboard path",
+            "long description",
+            "semantic summary",
+            "canvas/webgl",
+            "static export",
+            "exact-value alternative",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+
+    def test_live_dashboard_keeps_first_scan_and_visible_degradation_contracts(self) -> None:
+        content = (
+            self.skill_root / "references" / "interaction-responsive-and-state.md"
+        ).read_text(encoding="utf-8").lower()
+        for phrase in (
+            "first scan",
+            "stable position and encoding",
+            "chart-adjacent",
+            "main evidence before controls",
+            "degradation ladder",
+            "page-level",
+            "lower-frequency updates",
+            "narrower time window",
+            "degraded mode visible",
+            "last-known-good",
+            "append-only",
+            "replay/delta",
+            "do not invent a cursor",
+            "full snapshots or polling",
+            "replace data atomically",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+
+    def test_live_dashboard_keeps_recovery_privacy_and_resource_contracts(self) -> None:
+        content = (
+            self.skill_root / "references" / "interaction-responsive-and-state.md"
+        ).read_text(encoding="utf-8").lower()
+        for phrase in (
+            "resumable cursor",
+            "gap detection",
+            "idempotent replay",
+            "snapshot-plus-delta",
+            "live -> reconnecting -> repairing -> live",
+            "stable event identity",
+            "replay retention boundary",
+            "complete-snapshot check",
+            "entry and exit thresholds",
+            "hysteresis",
+            "recovery path",
+            "battery",
+            "thermal",
+            "device pixel ratio",
+            "gpu memory",
+            "bundle and bandwidth",
+            "offscreen",
+            "background tab",
+            "low-power",
+            "low-bandwidth",
+            "non-sensitive, compact, allowlisted",
+            "server-side saved-view reference",
+            "opaque",
+            "unpredictable",
+            "user/tenant-scoped",
+            "short-lived",
+            "revocable",
+            "referer",
+            "analytics",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+
+    def test_visualization_is_scoped_to_fallback_profiles(self) -> None:
+        expected_profiles = {"dramawork", "engineer", "frontend", "ops", "product", "research"}
+        profile_paths = sorted((REPO_ROOT / "profiles").glob("*.yml"))
+        actual_profiles = {
+            path.stem
+            for path in profile_paths
+            if f"- {self.SKILL_NAME}" in path.read_text(encoding="utf-8")
+        }
+        self.assertEqual(actual_profiles, expected_profiles)
+
+
+class ArchitectureDiagramSkillTests(unittest.TestCase):
+    SKILL_NAME = "ispark-architecture-diagrams"
+
+    def setUp(self) -> None:
+        self.skill_root = REPO_ROOT / "skills" / self.SKILL_NAME
+
+    def read_skill_text(self) -> str:
+        return "\n".join(path.read_text(encoding="utf-8") for path in self.skill_root.rglob("*.md"))
+
+    def test_architecture_diagram_entry_is_short_implicit_and_reference_only(self) -> None:
+        content = (self.skill_root / "SKILL.md").read_text(encoding="utf-8")
+        description = next(
+            line.removeprefix("description: ")
+            for line in content.splitlines()
+            if line.startswith("description: ")
+        )
+
+        self.assertLessEqual(len(description), 280)
+        self.assertLessEqual(len(content.splitlines()), 40)
+        self.assertLessEqual(len(content.encode("utf-8")), 4096)
+        self.assertFalse((self.skill_root / "scripts").exists())
+        agents = (self.skill_root / "agents" / "openai.yaml").read_text(encoding="utf-8")
+        self.assertIn("allow_implicit_invocation: true", agents)
+        for reference in (
+            "diagram-selection",
+            "source-model-and-formats",
+            "layout-and-interaction",
+            "verification-and-export",
+        ):
+            with self.subTest(reference=reference):
+                self.assertTrue((self.skill_root / "references" / f"{reference}.md").is_file())
+                self.assertIn(f"references/{reference}.md", content)
+
+    def test_architecture_diagram_routes_modeling_jobs_and_nearby_owners(self) -> None:
+        content = (self.skill_root / "SKILL.md").read_text(encoding="utf-8")
+        for phrase in (
+            "UML",
+            "class",
+            "activity",
+            "use-case",
+            "C4",
+            "ERD",
+            "DBML",
+            "BPMN",
+            "flowchart",
+            "sequence",
+            "state-machine",
+            "explorers",
+            "PlantUML",
+            "Graphviz",
+            "$ispark-data-visualization",
+            "$ispark-dev-workflow",
+            "$ispark-product-design",
+            "$ispark-browser-qa",
+            "$ispark-react-performance",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+
+        visualization = (REPO_ROOT / "skills" / "ispark-data-visualization" / "SKILL.md").read_text(encoding="utf-8")
+        anti_slop = (REPO_ROOT / "skills" / "ispark-anti-slop" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("$ispark-architecture-diagrams", visualization)
+        self.assertIn("$ispark-architecture-diagrams", anti_slop)
+        self.assertIn("when that skill is available", visualization)
+        self.assertIn("state the missing capability", visualization)
+        self.assertIn("high-density-rendering.md", visualization)
+
+    def test_architecture_discovery_is_explicitly_software_scoped(self) -> None:
+        content = (self.skill_root / "SKILL.md").read_text(encoding="utf-8")
+        description = next(
+            line.removeprefix("description: ")
+            for line in content.splitlines()
+            if line.startswith("description: ")
+        )
+        self.assertIn("Software/system diagrams", description)
+        self.assertIn("PlantUML/Mermaid/Graphviz/D2", description)
+        self.assertNotIn("numeric charts", description.split("Exclude numeric charts", 1)[0])
+
+    def test_architecture_diagram_fallback_boundary_is_explicit(self) -> None:
+        content = (self.skill_root / "SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("when that skill is available", content)
+        self.assertIn("state the missing capability", content)
+
+    def test_architecture_diagram_preserves_semantics_formats_and_layout_quality(self) -> None:
+        content = self.read_skill_text().lower()
+        for phrase in (
+            "one modeling question",
+            "one abstraction level",
+            "explicit, inferred",
+            "stable source ids",
+            "normalized model",
+            "xmi",
+            "umldi",
+            "plantuml",
+            "mermaid",
+            "graphviz dot",
+            "structurizr",
+            "dbml",
+            "bpmn xml",
+            "output formats, not semantic sources",
+            "layered or sugiyama",
+            "tidy tree",
+            "force or stress",
+            "orthogonal routing",
+            "port constraints",
+            "crossing",
+            "overlap",
+            "stable layout",
+            "intrinsic canvas",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+
+    def test_architecture_diagram_keeps_interaction_and_verification_contracts(self) -> None:
+        content = self.read_skill_text().lower()
+        for phrase in (
+            "search",
+            "filter",
+            "committed selection",
+            "clear selection",
+            "shareable state",
+            "keyboard",
+            "touch",
+            "reduced-motion",
+            "deterministic layout fixtures",
+            "round-trip",
+            "inferred relationships",
+            "text summary",
+            "svg",
+            "png",
+            "pdf",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+
+    def test_architecture_diagram_defines_editing_contract(self) -> None:
+        content = (
+            self.skill_root / "references" / "layout-and-interaction.md"
+        ).read_text(encoding="utf-8").lower()
+        for phrase in (
+            "semantic edits",
+            "cosmetic layout hints",
+            "stable source ids",
+            "typed ports",
+            "validate before commit",
+            "undo and redo",
+            "dirty and save state",
+            "version conflicts",
+            "silent overwrite",
+            "non-sensitive, compact, allowlisted",
+            "server-side saved-view reference",
+            "opaque",
+            "unpredictable",
+            "user/tenant-scoped",
+            "short-lived",
+            "revocable",
+            "referer",
+            "analytics",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+
+    def test_architecture_diagram_is_scoped_to_fallback_profiles(self) -> None:
+        expected_profiles = {
+            "agent-maintainer",
+            "backend",
+            "dramawork",
+            "engineer",
+            "frontend",
+            "ops",
+            "product",
+        }
+        profile_paths = sorted((REPO_ROOT / "profiles").glob("*.yml"))
+        actual_profiles = {
+            path.stem
+            for path in profile_paths
+            if f"- {self.SKILL_NAME}" in path.read_text(encoding="utf-8")
+        }
+        self.assertEqual(actual_profiles, expected_profiles)
+
+
+class VisualizationEngineeringOwnerTests(unittest.TestCase):
+    def test_react_owner_routes_visualization_integration_on_demand(self) -> None:
+        skill_root = REPO_ROOT / "skills" / "ispark-react-performance"
+        entrypoint = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        reference = (skill_root / "references" / "visualization-integration.md").read_text(encoding="utf-8")
+        self.assertIn("React/Next.js visualization integration", entrypoint)
+        self.assertIn("references/visualization-integration.md", entrypoint)
+        for phrase in (
+            "React owns structure",
+            "renderer owns geometry",
+            "same nodes",
+            "narrow Client Component",
+            "Server Components",
+            "reserve dimensions",
+            "dynamic import",
+            "high-frequency pointer",
+            "ResizeObserver",
+            "requestAnimationFrame",
+            "context loss",
+            "per-instance and page-level",
+            "server-only",
+            "smallest serializable client payload",
+            "cache and request-deduplication semantics",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase.lower(), reference.lower())
+
+    def test_dev_workflow_routes_typescript_visualization_contracts_on_demand(self) -> None:
+        skill_root = REPO_ROOT / "skills" / "ispark-dev-workflow"
+        entrypoint = (skill_root / "SKILL.md").read_text(encoding="utf-8")
+        reference = (skill_root / "references" / "typescript-visualization.md").read_text(encoding="utf-8")
+        self.assertIn("TypeScript visualization data or renderer contracts", entrypoint)
+        self.assertIn("references/typescript-visualization.md", entrypoint)
+        for phrase in (
+            "validate external data",
+            "unknown",
+            "discriminated unions",
+            "units",
+            "missingness",
+            "uncertainty",
+            "normalized semantic model",
+            "derived marks",
+            "renderer adapter",
+            "canonical view-state codec",
+            "ephemeral interaction state",
+            "stable order",
+            "migrate or reject",
+            "deterministic",
+            "fixed seed",
+            "real boundary",
+            "untrusted or undocumented external callback payloads",
+            "finite numbers",
+            "row, node, edge, string, and nesting limits",
+            "non-sensitive, compact, allowlisted",
+            "server-side saved-view reference",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase.lower(), reference.lower())
+
+
 class SkillPrivacyBoundaryTests(unittest.TestCase):
     def test_source_skills_exclude_project_specific_temporal_identifiers(self) -> None:
         forbidden_markers = (
@@ -390,6 +1004,127 @@ class SkillPrivacyBoundaryTests(unittest.TestCase):
             for marker in forbidden_markers:
                 with self.subTest(path=path.relative_to(REPO_ROOT), marker=marker):
                     self.assertNotIn(marker, content)
+
+    def test_privacy_scan_covers_all_distributable_skill_text(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            skill_root = root / "ispark-example"
+            (skill_root / "references").mkdir(parents=True)
+            (skill_root / "SKILL.md").write_text("---\nname: ispark-example\n---\n", encoding="utf-8")
+            samples = {
+                "references/email.md": "Contact person@private.example.cn\n",
+                "references/windows.yaml": "path: C:\\\\Users\\\\alice\\\\work\n",
+                "references/posix.toml": 'path = "/home/alice/work"\n',
+                "references/host.json": '{"host": "api.corp.internal"}\n',
+                "references/runtime.txt": "DRAMAWORK_QUEUE=dw:v2:jobs\n",
+                "references/device.svg": "<text>X-DW-device</text>\n",
+                "references/component.tsx": "const path = 'C:\\\\Users\\\\alice\\\\component';\n",
+            }
+            for relative_path, content in samples.items():
+                path = skill_root / relative_path
+                path.write_text(content, encoding="utf-8")
+
+            violations = validate_module.find_skill_privacy_violations(root)
+
+        combined = "\n".join(violations).lower()
+        for phrase in ("email", "windows user home", "posix user home", "internal hostname", "project/runtime marker"):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, combined)
+
+    def test_privacy_scan_allows_documented_portable_placeholders(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            skill_root = root / "ispark-example"
+            skill_root.mkdir()
+            (skill_root / "SKILL.md").write_text(
+                "\n".join(
+                    (
+                        "---",
+                        "name: ispark-example",
+                        "---",
+                        "person@example.com",
+                        "/home/appuser/.cache",
+                        "temporal-frontend.default.svc.cluster.local",
+                        "prometheus.<monitoring-namespace>.svc.cluster.local",
+                        "ISpark",
+                    )
+                ),
+                encoding="utf-8",
+            )
+
+            violations = validate_module.find_skill_privacy_violations(root)
+
+        self.assertEqual(violations, [])
+
+    def test_current_source_skill_payload_passes_generic_privacy_scan(self) -> None:
+        self.assertEqual(
+            validate_module.find_skill_privacy_violations(REPO_ROOT / "skills"),
+            [],
+        )
+
+    def test_public_manifest_metadata_is_outside_skill_payload_privacy_scope(self) -> None:
+        manifest = REPO_ROOT / "plugins" / "ispark-company" / ".codex-plugin" / "plugin.json"
+        manifest_data = json.loads(manifest.read_text(encoding="utf-8"))
+
+        self.assertRegex(manifest_data["author"]["email"], r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+        self.assertNotIn(manifest, validate_module.source_skill_files(REPO_ROOT / "skills").values())
+
+
+class VisualizationPressureTestEvidenceTests(unittest.TestCase):
+    def test_architecture_pressure_tests_store_complete_reproducible_evidence(self) -> None:
+        content = (REPO_ROOT / "docs" / "visualization-skill-pressure-tests.md").read_text(encoding="utf-8")
+
+        self.assertNotIn("<scenario prompt>", content)
+        for phrase in (
+            "## Reproducible Harness",
+            "Model and configuration",
+            "Known isolation limitation",
+            "#### Complete prompt",
+            "### Expected behavior",
+            "#### Observed RED",
+            "#### Observed GREEN",
+            "#### REFACTOR wording variation",
+            "#### Observed REFACTOR",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+        for scenario_id in ("ARCH-01", "ARCH-02", "ARCH-03"):
+            with self.subTest(scenario_id=scenario_id):
+                self.assertGreaterEqual(content.count(scenario_id), 2)
+        for preamble in (
+            "BASELINE CONTROL.",
+            "CANDIDATE FORWARD TEST.",
+            "CANDIDATE REFACTOR TEST.",
+        ):
+            with self.subTest(preamble=preamble):
+                self.assertGreaterEqual(content.count(preamble), 3)
+
+    def test_data_pressure_tests_store_complete_reproducible_evidence(self) -> None:
+        content = (REPO_ROOT / "docs" / "visualization-skill-pressure-tests.md").read_text(encoding="utf-8")
+
+        for phrase in (
+            "## DATA-01: Full-Snapshot Dashboard And Degradation",
+            "### Expected behavior",
+            "DASH-01 REFACTOR",
+            "Observed RED",
+            "Observed GREEN",
+            "Observed REFACTOR",
+            "complete snapshots every 10 seconds",
+            "no replay, delta, or cursor semantics",
+            "last-known-good",
+            "进入/退出阈值",
+            "HOLD",
+        ):
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, content)
+        self.assertGreaterEqual(content.count("DASH-01"), 4)
+        for preamble in (
+            "BASELINE CONTROL.",
+            "CANDIDATE FORWARD TEST.",
+            "CANDIDATE REFACTOR TEST.",
+        ):
+            with self.subTest(preamble=preamble):
+                self.assertGreaterEqual(content.count(preamble), 4)
 
 
 class SkillIconMetadataTests(unittest.TestCase):

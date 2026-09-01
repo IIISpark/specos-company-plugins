@@ -1,6 +1,6 @@
 ---
 name: ispark-tmeet
-description: Use for Tencent Meeting `tmeet` CLI tasks: OAuth status, scheduling, meeting lookup, recordings, participant reports, in-meeting control, and scoped troubleshooting. Contact lookup is allowed only to invite or call someone into a meeting, never for standalone people search.
+description: "Use for Tencent Meeting `tmeet` CLI tasks: OAuth status, scheduling, meeting lookup, recordings, participant reports, in-meeting control, and scoped troubleshooting. Contact lookup is allowed only to invite or call someone into a meeting, never for standalone people search."
 ---
 
 # ISpark Tencent Meeting

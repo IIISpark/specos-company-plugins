@@ -23,6 +23,8 @@ Read the narrowest owning skill before editing:
 
 - Reader-facing prose, Chinese prose, reports, or copy -> `$ispark-writing`.
 - Thesis, paper, abstract, method, results, discussion, or rebuttal -> `$ispark-academic-writing`.
+- UML, C4, ERD/schema, BPMN, sequence/state, dependency, or software architecture diagrams -> `$ispark-architecture-diagrams` when available; architecture decisions and source changes remain with `$ispark-dev-workflow` and `$ispark-review-risk`, and a missing target must be reported rather than silently guessed.
+- Data charts, maps, statistical graphics, evidence-bearing timelines/scrollytelling, or data-bearing diagrams whose encoding supports a claim -> `$ispark-data-visualization` when available; software/system diagrams use `$ispark-architecture-diagrams`, and UI-only dashboard shells/product direction use `$ispark-product-design`, with `$ispark-browser-qa` for rendered acceptance. If a target is unavailable, keep the current owner and state the gap.
 - Frontend, UI, visual system, or page redesign -> `$ispark-product-design`, then `$ispark-browser-qa` for rendered acceptance.
 - Code, PR, bug fix, generated implementation, or over-defensive branch -> `$ispark-dev-workflow` and, when reviewing risk, `$ispark-review-risk`.
 - Durable docs, release notes, or issue artifacts -> `$ispark-docs-issues` plus `$ispark-writing`; release state remains with `$ispark-release-ops`.

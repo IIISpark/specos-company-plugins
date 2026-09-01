@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Architecture diagrams">
+  <rect width="64" height="64" rx="12" fill="#edf2f4"/>
+  <path d="M19 20h14m10 7v10M26 30v7m0 0h17" fill="none" stroke="#2f4858" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="9" y="12" width="14" height="14" rx="2" fill="#fff" stroke="#2f4858" stroke-width="3"/>
+  <rect x="36" y="12" width="14" height="14" rx="2" fill="#fff" stroke="#2f4858" stroke-width="3"/>
+  <rect x="19" y="37" width="14" height="14" rx="2" fill="#fff" stroke="#e67700" stroke-width="3"/>
+  <rect x="40" y="37" width="14" height="14" rx="2" fill="#fff" stroke="#e67700" stroke-width="3"/>
+</svg>

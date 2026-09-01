@@ -1,6 +1,6 @@
 ---
 name: ispark-review-risk
-description: Use for review-only findings on code/diffs, plans, architecture, security/privacy, destructive actions, public contracts, structural root causes, or generated-code risk, including audit-context building before threat review. For implementation use ispark-dev-workflow; for neutral large-codebase mapping use ispark-codebase-understanding.
+description: "Use for review-only findings on code/diffs, plans, architecture, security/privacy, destructive actions, public contracts, root causes, generated-code risk, and audit context. Implementation: ispark-dev-workflow; unfamiliar-codebase mapping: ispark-codebase-understanding."
 ---
 
 # ISpark Review And Risk

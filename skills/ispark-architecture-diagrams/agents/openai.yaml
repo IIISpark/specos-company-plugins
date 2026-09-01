@@ -1,0 +1,10 @@
+interface:
+  display_name: "ISpark SpecOS Architecture Diagrams"
+  short_description: "为 UML、C4、ERD 和架构图选择可信的模型、布局与输出"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#2f4858"
+  default_prompt: "使用 $ispark-architecture-diagrams 为这个系统选择合适的图类型、事实模型、布局和验证方案。"
+
+policy:
+  allow_implicit_invocation: true

@@ -1,6 +1,6 @@
 ---
 name: ispark-notion
-description: Use for Notion `ntn` CLI tasks: authentication checks, scoped page or data-source reads, page edits, file uploads, diagnostics, and authorized API calls. Do not use for Feishu/Lark, generic web browsing, or unrelated documentation work.
+description: "Use for Notion `ntn` CLI tasks: authentication checks, scoped page or data-source reads, page edits, file uploads, diagnostics, and authorized API calls. Do not use for Feishu/Lark, generic web browsing, or unrelated documentation work."
 ---
 
 # ISpark Notion

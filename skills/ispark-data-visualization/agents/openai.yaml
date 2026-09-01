@@ -1,0 +1,10 @@
+interface:
+  display_name: "ISpark SpecOS Data Visualization"
+  short_description: "为图表、地图、仪表盘和科研图形选择可信的编码与渲染方案"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#0b7285"
+  default_prompt: "使用 $ispark-data-visualization 为这组证据选择可信的图形、编码、renderer 和验证方案。"
+
+policy:
+  allow_implicit_invocation: true

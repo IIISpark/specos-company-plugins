@@ -1,6 +1,6 @@
 ---
 name: ispark-academic-writing
-description: Use for drafting, revising, adapting, or auditing Chinese or English theses, papers, abstracts, methods, results, discussions, conclusions, or rebuttals, especially to reduce formulaic academic phrasing while preserving citations, equations, terminology, evidence, uncertainty, and claim strength. Exclude general prose.
+description: "Use for Chinese/English theses, papers, abstracts, methods, results, discussions, conclusions, or rebuttals: draft, revise, adapt, audit, humanize while preserving citations, equations, terminology, evidence, uncertainty, claim strength, and voice. Exclude general prose."
 ---
 
 # ISpark Academic Writing

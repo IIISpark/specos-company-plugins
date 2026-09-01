@@ -1,6 +1,6 @@
 ---
 name: ispark-apifox
-description: Use for Apifox CLI or MCP work: API contracts, schemas, examples, mocks, imports, exports, test cases, scenarios, automation, reports, branches, and API lifecycle governance. Do not use for generic API implementation or prose-only docs.
+description: "Use for Apifox CLI or MCP work: API contracts, schemas, examples, mocks, imports, exports, test cases, scenarios, automation, reports, branches, and API lifecycle governance. Do not use for generic API implementation or prose-only docs."
 ---
 
 # ISpark Apifox

@@ -3,7 +3,7 @@
 This repository is the shared source of truth for ISpark SpecOS Codex capabilities.
 It currently publishes the `ispark-company` Codex plugin, which contains company-level
 skills for Agent Harness, engineering workflow, large-codebase understanding, React/Next
-performance, product design, release operations, writing and editorial quality, academic
+performance, data visualization, architecture diagrams, product design, release operations, writing and editorial quality, academic
 writing, cross-domain anti-slop review, Tencent Meeting CLI, Lark collaboration, evidence-based hiring,
 review, debugging, browser QA, and Temporal worker work.
 
@@ -180,6 +180,76 @@ theme catalog, `.hallmark/` state, source stamps, or tool assumptions.
 For direct-install research work, use the `research` fallback profile so academic
 preservation rules are available without adding scholarly defaults to unrelated roles.
 
+## Data Visualization
+
+`ispark-data-visualization` owns the analytical semantics, encoding, renderer selection,
+interaction state, verification, and export of evidence-bearing charts, maps, dashboards,
+statistical graphics, and data-bearing diagrams. It is stack-neutral: declarative charting,
+scientific/static plotting, SVG/D3, Canvas, WebGL/Three.js, maps, and diagram renderers are
+selected by data shape, interaction, accessibility, performance, maintenance, and export
+needs. D3 is not the default.
+
+Live dashboards additionally define the first-scan path, stable primary-metric placement,
+chart-adjacent keys, mobile evidence-before-controls behavior, and a visible degradation
+ladder for rising data rate, mark count, network pressure, and page-level renderer cost.
+Append-only or replayable streams retain resumable cursors, gap detection, idempotent replay,
+and source-supported snapshot-plus-delta or replay-window repair. Full snapshots and polling sources use versioned atomic
+replacement and stale/partial-response handling instead of an invented cursor. Degradation
+steps have entry/exit thresholds, hysteresis, and recovery behavior;
+resource budgets include device, thermal, GPU, bandwidth, offscreen, and background state.
+Recovery is an explicit `live -> reconnecting -> repairing -> live` gate: a cursor requires documented
+event identity, ordering, and replay retention; otherwise the view stays stale/unavailable until a valid
+complete snapshot or source-supported repair is accepted.
+Shareable state stays compact and allowlisted, with protected or large state represented by
+an authorized server-side saved-view reference instead of sensitive URL fields.
+
+Immersive, staged, map-heavy, graph-heavy, and Gantt modes must record executable entry/exit conditions,
+minimum dwell or hysteresis, fallback state, preserved invariants, resource budget, and deterministic fixtures;
+thresholds cannot remain prose-only.
+
+All discovery descriptions stay within a 280-character budget; the visualization entry loads one of seven
+references only after routing, while detailed contracts remain on demand.
+General page and product visual direction remains with `ispark-product-design`; actual
+DOM, console, network, screenshot, and responsive acceptance remains with
+`ispark-browser-qa`; React/Next performance remains with `ispark-react-performance`.
+UML class/activity/use-case/sequence/state-machine, C4, ERD/DBML, BPMN/flowchart, and software architecture diagrams use
+`ispark-architecture-diagrams` instead of this data owner when it is available; a
+fallback profile reports the missing capability rather than guessing.
+The host's in-conversation visualization capability is optional and is not a runtime
+dependency of the company skill.
+
+The method is an independent, selective rewrite informed by the MIT-licensed OpenAI
+`build-web-data-visualization` 0.1.21 package. The plugin does not vendor its 18 specialist
+skills, host protocols, pinned D3/CDN setup, framework-specific APIs, or template catalog.
+The source and rejection boundary are recorded in
+[`docs/candidate-skill-integration.md`](docs/candidate-skill-integration.md).
+
+## Architecture Diagrams
+
+`ispark-architecture-diagrams` owns the modeling and representation of verified system
+structure, runtime interaction, process, state, schema, and dependency facts. Its short
+entry routes to four references for diagram selection, normalized source models and
+formats, graph layout and interaction, or verification and export. It supports formal
+UML as well as C4, ERD/DBML, BPMN, sequence/state diagrams, dependency graphs, and
+source-backed architecture maps without making any notation mandatory.
+
+The skill keeps source IDs and explicit/inferred status separate from renderer geometry;
+chooses tree, layered/Sugiyama, force/stress, radial, or circular layout from the graph's
+reading task; and treats routing, crossings, overlap, stable layout, accessibility,
+round-trip behavior, and SVG/PNG/PDF/HTML export as explicit contracts. Mermaid,
+PlantUML, Graphviz, D2, Structurizr, XMI/UMLDI, BPMN XML, and interactive graph libraries
+are conditional format or renderer paths, not bundled dependencies.
+
+Editable architecture surfaces distinguish semantic edits from layout hints, use stable
+source IDs and typed ports, validate before commit, and define undo/redo, dirty/save, and
+version-conflict behavior. They do not silently overwrite newer source facts or place
+restricted entity names, private notes, or arbitrary free text in shareable URLs.
+
+Architecture and schema decisions remain with `ispark-dev-workflow` and
+`ispark-review-risk`; product composition remains with `ispark-product-design`; React
+integration remains with `ispark-react-performance`; rendered acceptance remains with
+`ispark-browser-qa`.
+
 `ispark-tmeet` owns Tencent Meeting CLI routing, authentication boundaries, meeting and
 recording operations, participant reports, live controls, and scoped troubleshooting.
 It is distinct from `ispark-lark`; its command details load only after Tencent Meeting
@@ -219,9 +289,13 @@ External engineering-method repositories are integrated selectively. Planning, T
 debugging, review, verification, code simplification, and parallel-agent methods stay
 under their existing owner skills. `ispark-codebase-understanding` is a separate,
 read-first entry only for broad unfamiliar-codebase reconnaissance;
-`ispark-react-performance` is a separate entry only for React/Next implementation
-performance and component APIs. Visual intent remains with `ispark-product-design`, and
-rendered acceptance remains with `ispark-browser-qa`.
+`ispark-react-performance` is a separate entry for React/Next implementation performance,
+component APIs, and an on-demand visualization integration reference covering renderer
+ownership, narrow client boundaries, hydration, lifecycle cleanup, and page-level cost.
+`ispark-dev-workflow` now routes typed visualization work to an on-demand TypeScript
+contract reference covering runtime validation, normalized semantic models, renderer
+adapters, durable view-state codecs, and deterministic transforms. Visual intent remains
+with `ispark-product-design`, and rendered acceptance remains with `ispark-browser-qa`.
 
 Pinned upstream commits, licenses, rejected runtimes, and loading boundaries are recorded
 in [`docs/candidate-skill-integration.md`](docs/candidate-skill-integration.md).
@@ -256,16 +330,23 @@ python tools/validate.py
 
 Validation checks:
 
-- every source skill has valid frontmatter
+- every source skill has parser-valid YAML frontmatter with the required string fields
 - every source skill has resolvable direct reference paths
 - every source skill has Simplified Chinese output guidance
 - every source skill has temporary artifact path guidance
 - every source skill explicitly allows implicit invocation
+- every UTF-8 text file in a distributable skill excludes personal emails and user homes,
+  concrete internal hostnames, and downstream project/runtime markers; reserved examples
+  and documented portable service placeholders remain allowed
 - profile entries reference existing source skills
 - plugin snapshot relative paths and byte contents match published source skills
 - plugin logo/icon paths exist
 - skill UI icon paths exist
 - each skill `default_prompt` names its own `$skill`
+
+The payload privacy scan covers `skills/` text. Plugin manifest author fields are intentional
+public package metadata and remain outside that scan; changing maintainer identity is a
+separate release decision.
 
 After a human reviews the diff, commit and push to GitHub. Do not push from a local
 draft before review.

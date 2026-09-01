@@ -20,6 +20,8 @@ Do not remove a useful table, list, formal phrase, UI primitive, error state, or
 | General prose | `ispark-writing` | concrete claims, register, rhythm, fact ledger | source text and intended audience |
 | Chinese prose | `ispark-writing` + `chinese-writing.md` | de-nominalization, non-mechanical structure, genre fit | original wording and genre |
 | Academic prose | `ispark-academic-writing` | citation/equation preservation, claim scope, section function | manuscript source and citation/notation context |
+| Architecture diagram | `ispark-architecture-diagrams` | modeling fit, source truth, abstraction, layout, maintainable output | UML/C4/ERD/BPMN/sequence/state/dependency or software architecture diagram |
+| Data visualization | `ispark-data-visualization` | truthful encoding, statistical integrity, renderer fit, usable states | data charts, maps, statistical graphics, evidence-bearing timelines/scrollytelling, data-bearing diagrams, or dashboards whose encoding supports a decision; software/system diagrams stay with the architecture owner |
 | Frontend/UI | `ispark-product-design` | intentional hierarchy, visual specificity, complete states | source plus browser render when available |
 | Code/PR | `ispark-dev-workflow` + `ispark-review-risk` | root-cause fix, minimal diff, observable failure | call path, tests, contracts, and diff |
 
@@ -33,7 +35,11 @@ Use the smallest loading set that can answer the request:
 4. Do not load `ispark-anti-slop` again after handoff unless the task changes into a cross-domain audit.
 
 Negative boundaries prevent accidental context growth: wording-only work stays with
-`ispark-writing`; visual or interaction work stays with `ispark-product-design`; code
+`ispark-writing`; system and software diagram semantics stay with `ispark-architecture-diagrams`;
+evidence-bearing data visualization stays with `ispark-data-visualization`
+when data encoding or analytical evidence is the work; UI-only dashboard shells stay with
+`ispark-product-design`;
+general visual or interaction work stays with `ispark-product-design`; code
 implementation stays with `ispark-dev-workflow`; review-only work stays with
 `ispark-review-risk`.
 

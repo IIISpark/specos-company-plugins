@@ -1,6 +1,6 @@
 ---
 name: ispark-hiring
-description: Use when Codex needs to define hiring context or roles, build evidence rubrics, screen candidate batches, prepare candidate-specific interview runbooks, analyze interview records or transcripts, draft post-interview evaluations and human decision records, or review hiring-process quality.
+description: "Use for hiring context and roles, evidence rubrics, candidate-batch screening, interview runbooks, interview-record or transcript analysis, post-interview evaluations, decision records, and hiring-process review."
 ---
 
 # ISpark Hiring

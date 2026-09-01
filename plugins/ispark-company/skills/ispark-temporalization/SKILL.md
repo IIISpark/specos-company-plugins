@@ -1,6 +1,6 @@
 ---
 name: ispark-temporalization
-description: Assess, initialize, refactor, and normalize Python modules into ISpark's Temporal-ready worker structure with canonical orchestration, explicit `config/contracts/services/infra/bootstrap/temporal` boundaries, layered tests, object-reference payloads, rollout safety, and synchronized docs/release-note updates. Use for Python workers, workflows, activities, queue naming, provider gateway audit/idempotency, object storage boundaries, and Temporal deployment readiness.
+description: "Use for Python Temporal workers, workflows, and activities: canonical orchestration; config/contracts/services/infra/bootstrap/temporal boundaries; layered tests; object refs; rollout safety; provider audit/idempotency; object storage, queues, and deployment readiness."
 ---
 
 # Temporalization
